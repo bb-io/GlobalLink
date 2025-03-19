@@ -13,15 +13,16 @@ public class ConnectionValidator: IConnectionValidator
     {
         try
         {
-            var client = new Client(authenticationCredentialsProviders);
+            var client = new ApiClient(authenticationCredentialsProviders);
+            var request = new ApiRequest("/PD/rest/v0/instanceInfo", Method.Get, authenticationCredentialsProviders);
 
-            await client.ExecuteWithErrorHandling(new RestRequest());
-
+            await client.ExecuteWithErrorHandling(request);
             return new()
             {
                 IsValid = true
             };
-        } catch(Exception ex)
+        } 
+        catch(Exception ex)
         {
             return new()
             {

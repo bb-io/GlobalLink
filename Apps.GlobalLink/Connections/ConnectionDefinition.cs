@@ -14,12 +14,34 @@ public class ConnectionDefinition : IConnectionDefinition
             AuthenticationType = ConnectionAuthenticationType.Undefined,
             ConnectionProperties = new List<ConnectionProperty>
             {
-                new(CredsNames.Token) { DisplayName = "API Token", Sensitive = true}
+                new(CredNames.BaseUrl) 
+                { 
+                    DisplayName = "Base URL", 
+                    Sensitive = false,
+                    Description = "The base URL for the GlobalLink API. Expected format: `https://api.globallink.com`"
+                },
+                new(CredNames.Username) 
+                { 
+                    DisplayName = "Username", 
+                    Sensitive = false,
+                    Description = "The username of user for the GlobalLink API."
+                },
+                new(CredNames.Password) 
+                { 
+                    DisplayName = "Password", 
+                    Sensitive = true,
+                    Description = "The password of user for the GlobalLink API."
+                },
+                new(CredNames.BasicAuthToken) 
+                { 
+                    DisplayName = "Basic Auth Token", 
+                    Sensitive = true,
+                    Description = "The Basic Auth Token for the GlobalLink API."
+                }
             }
         }
     };
 
     public IEnumerable<AuthenticationCredentialsProvider> CreateAuthorizationCredentialsProviders(
-        Dictionary<string, string> values) => values.Select(x => new AuthenticationCredentialsProvider(x.Key, x.Value)
-        ).ToList();
+        Dictionary<string, string> values) => values.Select(x => new AuthenticationCredentialsProvider(x.Key, x.Value)).ToList();
 }

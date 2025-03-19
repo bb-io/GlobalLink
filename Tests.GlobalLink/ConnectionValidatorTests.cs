@@ -1,5 +1,6 @@
 using Apps.GlobalLink.Connections;
 using Blackbird.Applications.Sdk.Common.Authentication;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tests.GlobalLink.Base;
 
 namespace Tests.GlobalLink;
@@ -13,8 +14,9 @@ public class ConnectionValidatorTests : TestBase
         var validator = new ConnectionValidator();
 
         var result = await validator.ValidateConnection(Creds, CancellationToken.None);
-        Console.WriteLine(result.Message);
+
         Assert.IsTrue(result.IsValid);
+        Console.WriteLine(result.Message);
     }
 
     [TestMethod]
