@@ -1,8 +1,8 @@
-﻿using Apps.Appname.Constants;
+using Apps.GlobalLink.Constants;
 using Blackbird.Applications.Sdk.Common.Authentication;
 using Blackbird.Applications.Sdk.Common.Connections;
 
-namespace Apps.Appname.Connections;
+namespace Apps.GlobalLink.Connections;
 
 public class ConnectionDefinition : IConnectionDefinition
 {

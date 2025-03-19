@@ -1,7 +1,7 @@
-﻿using Apps.Appname.Actions;
-using Tests.Appname.Base;
+using Apps.GlobalLink.Actions;
+using Tests.GlobalLink.Base;
 
-namespace Tests.Appname;
+namespace Tests.GlobalLink;
 
 [TestClass]
 public class ActionTests : TestBase

@@ -1,8 +1,8 @@
-﻿using Apps.Appname.Handlers;
+using Apps.GlobalLink.Handlers;
 using Blackbird.Applications.Sdk.Common.Dynamic;
-using Tests.Appname.Base;
+using Tests.GlobalLink.Base;
 
-namespace Tests.Appname;
+namespace Tests.GlobalLink;
 
 [TestClass]
 public class HandlerTests : TestBase

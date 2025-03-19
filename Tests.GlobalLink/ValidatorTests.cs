@@ -1,8 +1,8 @@
-using Apps.Appname.Connections;
+using Apps.GlobalLink.Connections;
 using Blackbird.Applications.Sdk.Common.Authentication;
-using Tests.Appname.Base;
+using Tests.GlobalLink.Base;
 
-namespace Tests.Appname;
+namespace Tests.GlobalLink;
 
 [TestClass]
 public class ConnectionValidatorTests : TestBase

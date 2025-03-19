@@ -1,4 +1,4 @@
-namespace Apps.Appname.Constants;
+namespace Apps.GlobalLink.Constants;
 
 public static class CredsNames
 {
