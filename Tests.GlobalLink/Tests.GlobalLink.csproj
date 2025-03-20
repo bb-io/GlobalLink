@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Output\" />
+    <Folder Include="TestFiles\Output\" />
   </ItemGroup>
 
   <ItemGroup>

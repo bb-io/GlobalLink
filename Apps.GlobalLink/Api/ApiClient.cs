@@ -1,3 +1,4 @@
+using Apps.GlobalLink.Models.Dtos;
 using Apps.GlobalLink.Utils;
 using Blackbird.Applications.Sdk.Common.Authentication;
 using Blackbird.Applications.Sdk.Common.Exceptions;
@@ -23,7 +24,12 @@ public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credential
 
     protected override Exception ConfigureErrorException(RestResponse response)
     {
-        var error = JsonConvert.DeserializeObject(response.Content!);
-        throw new PluginApplicationException(response.Content ?? response.ErrorMessage ?? $"Unknown error. Status code: {response.StatusCode}");
+        var error = JsonConvert.DeserializeObject<ErrorDto>(response.Content!);
+        if(error is null)
+        {
+            return new PluginApplicationException(response.Content ?? response.ErrorMessage ?? $"Status code: {response.StatusCode}");
+        }
+
+        throw new PluginApplicationException(error.ToString());
     }
 }

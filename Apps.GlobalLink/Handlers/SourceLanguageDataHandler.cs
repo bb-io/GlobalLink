@@ -8,7 +8,7 @@ using RestSharp;
 
 namespace Apps.GlobalLink.Handlers;
 
-public class WorkflowDataHandler(InvocationContext invocationContext, [ActionParameter] ProjectRequest projectRequest)
+public class SourceLanguageDataHandler(InvocationContext invocationContext, [ActionParameter] ProjectRequest projectRequest)
     : Invocable(invocationContext), IAsyncDataSourceItemHandler
 {
     public async Task<IEnumerable<DataSourceItem>> GetDataAsync(DataSourceContext context, CancellationToken cancellationToken)
@@ -19,11 +19,12 @@ public class WorkflowDataHandler(InvocationContext invocationContext, [ActionPar
         }
 
         var apiClient = new ApiClient(Credentials);
-        var apiRequest = new ApiRequest($"/rest/v0/projects/{projectRequest.ProjectId}/workflows", Method.Get, Credentials);
+        var apiRequest = new ApiRequest($"/rest/v0/projects/{projectRequest.ProjectId}/languagedirections", Method.Get, Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<WorkflowResponse>>(apiRequest);
-        return response.Where(x => string.IsNullOrEmpty(context.SearchString) || x.Name.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
-            .Select(x => new DataSourceItem(x.Id, x.Name))
+        var response = await apiClient.ExecuteWithErrorHandling<List<LanguageResponse>>(apiRequest);
+        return response.DistinctBy(x => x.SourceLanguage)
+            .Where(x => string.IsNullOrEmpty(context.SearchString) || x.SourceLanguageDisplayName.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
+            .Select(x => new DataSourceItem(x.SourceLanguage, x.SourceLanguageDisplayName))
             .ToList();
     }
 }

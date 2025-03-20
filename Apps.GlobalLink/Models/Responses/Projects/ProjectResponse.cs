@@ -1,6 +1,6 @@
 using Blackbird.Applications.Sdk.Common;
 
-namespace Apps.GlobalLink.Models.Responses;
+namespace Apps.GlobalLink.Models.Responses.Projects;
 
 public class ProjectResponse
 {

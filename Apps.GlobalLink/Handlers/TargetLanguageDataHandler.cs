@@ -13,6 +13,11 @@ public class TargetLanguageDataHandler(InvocationContext invocationContext, [Act
 {
     public async Task<IEnumerable<DataSourceItem>> GetDataAsync(DataSourceContext context, CancellationToken cancellationToken)
     {
+        if(string.IsNullOrEmpty(projectRequest.ProjectId))
+        {
+            throw new ArgumentException("'Project ID' is required. Please input this input first.");
+        }
+
         var apiClient = new ApiClient(Credentials);
         var apiRequest = new ApiRequest($"/rest/v0/projects/{projectRequest.ProjectId}/languagedirections", Method.Get, Credentials);
 

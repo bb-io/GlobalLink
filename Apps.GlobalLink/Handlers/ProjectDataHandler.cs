@@ -1,5 +1,5 @@
 using Apps.GlobalLink.Api;
-using Apps.GlobalLink.Models.Responses;
+using Apps.GlobalLink.Models.Responses.Projects;
 using Blackbird.Applications.Sdk.Common.Dynamic;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using RestSharp;
