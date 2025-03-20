@@ -15,7 +15,7 @@ public class ApiRequest(string resource, Method method, IEnumerable<Authenticati
         var restClient = new RestClient(new Uri(creds.GetBaseUrl()));
 
         var basicAuthToken = creds.GetBasicAuthToken();
-        var restRequest = new RestRequest("/PD/oauth/token", Method.Post)
+        var restRequest = new RestRequest("/oauth/token", Method.Post)
             .AddHeader("Authorization", $"Basic {basicAuthToken}")
             .AddParameter("grant_type", "password")
             .AddParameter("username", creds.GetUsername())

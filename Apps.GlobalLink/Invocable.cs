@@ -7,12 +7,12 @@ namespace Apps.GlobalLink;
 
 public class Invocable : BaseInvocable
 {
-    protected AuthenticationCredentialsProvider[] Creds =>
+    protected AuthenticationCredentialsProvider[] Credentials =>
         InvocationContext.AuthenticationCredentialsProviders.ToArray();
-
     protected ApiClient Client { get; }
+    
     public Invocable(InvocationContext invocationContext) : base(invocationContext)
     {
-        Client = new(Creds);
+        Client = new(Credentials);
     }
 }

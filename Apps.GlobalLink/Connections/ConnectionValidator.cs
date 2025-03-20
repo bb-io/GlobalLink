@@ -14,7 +14,7 @@ public class ConnectionValidator: IConnectionValidator
         try
         {
             var client = new ApiClient(authenticationCredentialsProviders);
-            var request = new ApiRequest("/PD/rest/v0/instanceInfo", Method.Get, authenticationCredentialsProviders);
+            var request = new ApiRequest("/rest/v0/instanceInfo", Method.Get, authenticationCredentialsProviders);
 
             await client.ExecuteWithErrorHandling(request);
             return new()

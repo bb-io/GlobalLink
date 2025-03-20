@@ -15,7 +15,7 @@ public static class AuthenticationCredentialsProviderExtensions
             throw new Exception("Base URL is not provided. Please provide a valid base URL.");
         }
 
-        return baseUrlKeyValue.Value.TrimEnd('/');
+        return baseUrlKeyValue.Value.TrimEnd('/') + "/PD";
     }
 
     public static string GetUsername(this IEnumerable<AuthenticationCredentialsProvider> creds)

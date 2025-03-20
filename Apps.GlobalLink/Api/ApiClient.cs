@@ -12,11 +12,18 @@ public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credential
         BaseUrl = new Uri(credentials.GetBaseUrl()),
     })
 {
+    protected override JsonSerializerSettings? JsonSettings => new()
+    {
+        NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        Formatting = Formatting.None,
+        DateFormatHandling = DateFormatHandling.IsoDateFormat,
+        DateParseHandling = DateParseHandling.None,
+    };
+
     protected override Exception ConfigureErrorException(RestResponse response)
     {
         var error = JsonConvert.DeserializeObject(response.Content!);
-        var errorMessage = "";
-
-        throw new PluginApplicationException(errorMessage);
+        throw new PluginApplicationException(response.Content ?? response.ErrorMessage ?? $"Unknown error. Status code: {response.StatusCode}");
     }
 }
