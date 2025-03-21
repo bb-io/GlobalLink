@@ -7,14 +7,15 @@ using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
-using Blackbird.Applications.Sdk.Utils.Extensions.Files;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using RestSharp;
 
 namespace Apps.GlobalLink.Actions;
 
+// TODO: Implement upload translated files, complete translation and download translated files actions. And events for webhook notifications. Implement pagination for all get items requests
+
 [ActionList]
-public class SubmissionActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : Invocable(invocationContext)
+public class SubmissionActions(InvocationContext invocationContext) : Invocable(invocationContext)
 {
     [Action("Get submission", Description = "Retrieves a submission by its ID.")]
     public async Task<SubmissionResponse> GetSubmissionAsync([ActionParameter] SubmissionRequest submissionId)
@@ -40,32 +41,6 @@ public class SubmissionActions(InvocationContext invocationContext, IFileManagem
         {
             SubmissionId = submissionIdDto.SubmissionId
         });
-    }
-
-    [Action("Upload source file", Description = "Uploads a source file to a submission.")]
-    public async Task<UploadSourceFileResponse> UploadSourceFileAsync([ActionParameter] UploadSourceFileRequest request)
-    {
-        var stream = await fileManagementClient.DownloadAsync(request.File);
-        var bytes = await stream.GetByteData();
-
-        // TODO: handle fileFormatName optional parameter
-        var apiRequest = new ApiRequest($"/rest/v0/submissions/{request.SubmissionId}/upload/source", Method.Post, Credentials)
-            .AddFile("file", bytes, request.File.Name)
-            .AddParameter("batchName", request.BatchName ?? "Batch1");
-
-        return await Client.ExecuteWithErrorHandling<UploadSourceFileResponse>(apiRequest);
-    }
-
-    [Action("Upload reference file", Description = "Uploads a reference file to a submission ob submission level.")]
-    public async Task UploadReferenceFileAsync([ActionParameter] UploadReferenceFileRequest request)
-    {
-        var stream = await fileManagementClient.DownloadAsync(request.File);
-        var bytes = await stream.GetByteData();
-
-        var apiRequest = new ApiRequest($"/rest/v0/submissions/{request.SubmissionId}/upload/reference", Method.Post, Credentials)
-            .AddFile("file", bytes, request.File.Name)
-            .AddParameter("submissionLevel", true);
-        await Client.ExecuteWithErrorHandling(apiRequest);
     }
 
     [Action("Start submission", Description = "First analyzes and then starts a submission.")]
