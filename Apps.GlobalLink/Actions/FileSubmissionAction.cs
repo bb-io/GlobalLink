@@ -48,19 +48,12 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     [Action("Download target files", Description = "Downloads a translated file from a submission.")]
     public async Task<DownloadTargetFilesResponse> DownloadTargetFilesAsync([ActionParameter] DownloadTargetFilesRequest request)
     {
-        try
+        var targets = await GetProcessedTargetsAsync(request.SubmissionId);
+        var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
+        return new DownloadTargetFilesResponse
         {
-            var targets = await GetProcessedTargetsAsync(request.SubmissionId);
-            var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
-            return new DownloadTargetFilesResponse
-            {
-                TargetFiles = allFiles
-            };
-        }
-        catch(Exception ex)
-        {
-            throw new PluginApplicationException($"{ex.Message}; {ex.StackTrace}");
-        }
+            TargetFiles = allFiles
+        };
     }
 
     private async Task<List<TargetResponse>> GetProcessedTargetsAsync(string submissionId)
@@ -68,7 +61,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
             .AddQueryParameter("targetStatus", "PROCESSED")
             .AddQueryParameter("submissionIds", submissionId);
-        
+
         var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
         if (targets.Count == 0)
         {

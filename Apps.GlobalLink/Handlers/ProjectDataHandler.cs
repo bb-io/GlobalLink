@@ -18,7 +18,7 @@ public class ProjectDataHandler(InvocationContext invocationContext) : Invocable
 
         var apiClient = new ApiClient(Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<ProjectResponse>>(request);
+        var response = await apiClient.PaginateAsync<ProjectResponse>(request);
         return response.Select(x => new DataSourceItem(x.ProjectId, x.Name)).ToList();
     }
 }

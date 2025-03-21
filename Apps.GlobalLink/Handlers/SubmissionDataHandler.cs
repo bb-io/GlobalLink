@@ -18,7 +18,7 @@ public class SubmissionDataHandler(InvocationContext invocationContext) : Invoca
 
         var apiClient = new ApiClient(Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<SubmissionResponse>>(request);
+        var response = await apiClient.PaginateAsync<SubmissionResponse>(request);
         return response.Select(x => new DataSourceItem(x.SubmissionId, x.Name)).ToList();
     }
 }

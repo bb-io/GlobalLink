@@ -13,7 +13,7 @@ public class ClaimableSubmissionDataHandler(InvocationContext invocationContext)
         var request = new ApiRequest("/rest/v0/submissions/claimable", Method.Get, Credentials);
         var apiClient = new ApiClient(Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<ClaimableSubmissionResponse>>(request);
+        var response = await apiClient.PaginateAsync<ClaimableSubmissionResponse>(request);
         return response
             .Where(x => string.IsNullOrEmpty(context.SearchString) || x.SubmissionName.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
             .Select(x => new DataSourceItem(x.SubmissionId, x.SubmissionName)).ToList();

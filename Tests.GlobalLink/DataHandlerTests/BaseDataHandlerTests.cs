@@ -8,6 +8,7 @@ public abstract class BaseDataHandlerTests : TestBase
 {
     protected abstract IAsyncDataSourceItemHandler DataHandler { get; }
     protected abstract string SearchString { get; }
+    protected virtual bool CanBeEmpty => false; 
 
     [TestMethod]
     public virtual async Task GetDataAsync_WithoutSearchString_ShouldReturnNonEmptyCollection()
@@ -27,9 +28,12 @@ public abstract class BaseDataHandlerTests : TestBase
         var result = await dataHandler.GetDataAsync(context, CancellationToken.None);
 
         Assert.IsNotNull(result);
-        Assert.IsTrue(result.Any(), "Result should not be empty.");
-        Assert.IsTrue(result.All(item => !string.IsNullOrEmpty(item.DisplayName)), "All items should have a name.");
+        if(CanBeEmpty == false)
+        {
+            Assert.IsTrue(result.Any(), "Result should not be empty.");
+        }
 
+        Assert.IsTrue(result.All(item => !string.IsNullOrEmpty(item.DisplayName)), "All items should have a name.");
         if (!string.IsNullOrEmpty(searchString))
         {
             Assert.IsTrue(result.All(item => item.DisplayName.Contains(searchString, StringComparison.OrdinalIgnoreCase)), 

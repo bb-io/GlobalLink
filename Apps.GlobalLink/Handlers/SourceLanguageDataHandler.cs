@@ -21,7 +21,7 @@ public class SourceLanguageDataHandler(InvocationContext invocationContext, [Act
         var apiClient = new ApiClient(Credentials);
         var apiRequest = new ApiRequest($"/rest/v0/projects/{projectRequest.ProjectId}/languagedirections", Method.Get, Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<LanguageResponse>>(apiRequest);
+        var response = await apiClient.PaginateAsync<LanguageResponse>(apiRequest);
         return response.DistinctBy(x => x.SourceLanguage)
             .Where(x => string.IsNullOrEmpty(context.SearchString) || x.SourceLanguageDisplayName.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
             .Select(x => new DataSourceItem(x.SourceLanguage, x.SourceLanguageDisplayName))

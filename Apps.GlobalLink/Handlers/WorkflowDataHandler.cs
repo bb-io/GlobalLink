@@ -21,7 +21,7 @@ public class WorkflowDataHandler(InvocationContext invocationContext, [ActionPar
         var apiClient = new ApiClient(Credentials);
         var apiRequest = new ApiRequest($"/rest/v0/projects/{projectRequest.ProjectId}/workflows", Method.Get, Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<WorkflowResponse>>(apiRequest);
+        var response = await apiClient.PaginateAsync<WorkflowResponse>(apiRequest);
         return response.Where(x => string.IsNullOrEmpty(context.SearchString) || x.Name.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
             .Select(x => new DataSourceItem(x.Id, x.Name))
             .ToList();

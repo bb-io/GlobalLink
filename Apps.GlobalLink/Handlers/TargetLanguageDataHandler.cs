@@ -17,11 +17,11 @@ public class TargetLanguageDataHandler(InvocationContext invocationContext, [Act
         {
             throw new ArgumentException("'Project ID' is required. Please input this input first.");
         }
-
+        
         var apiClient = new ApiClient(Credentials);
         var apiRequest = new ApiRequest($"/rest/v0/projects/{projectRequest.ProjectId}/languagedirections", Method.Get, Credentials);
 
-        var response = await apiClient.ExecuteWithErrorHandling<List<LanguageResponse>>(apiRequest);
+        var response = await apiClient.PaginateAsync<LanguageResponse>(apiRequest);
         return response.Where(x => string.IsNullOrEmpty(context.SearchString) || x.TargetLanguageDisplayName.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
             .Select(x => new DataSourceItem(x.TargetLanguage, x.TargetLanguageDisplayName))
             .ToList();

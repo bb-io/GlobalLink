@@ -84,34 +84,30 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
 
         await Client.ExecuteWithErrorHandling(apiRequest);
     }
-
     private async Task PollUntilProcessIsNotFinishedAsync(string submissionId)
     {
-        const int MaxRetries = 10;
+        const int MaxRetries = 30;
+        const int DelayMilliseconds = 5000;
         var retries = 0;
-        var lastStatus = string.Empty;
         var lastMessage = string.Empty;
 
-        while (true)
+        while (retries < MaxRetries)
         {
-            if (retries >= MaxRetries)
-            {
-                throw new PluginApplicationException($"It took too long time to process the submission. Last status: {lastStatus}. Last message: {lastMessage}. Please, contact blackbird support for further assistance.");
-            }
-
             var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/status", Method.Get, Credentials);
             var statusResponse = await Client.ExecuteWithErrorHandling<SubmissionStatusResponse>(apiRequest);
 
             if (statusResponse.Status != "PROCESSING")
             {
-                break;
+                return;
             }
 
-            retries += 1;
-            lastStatus = statusResponse.Status;
+            retries++;
             lastMessage = statusResponse.Message;
-            await Task.Delay(5000);
+            await Task.Delay(DelayMilliseconds);
         }
+
+        throw new PluginApplicationException(
+            $"Process timeout after {MaxRetries} attempts. Last message: {lastMessage}. Please contact blackbird support.");
     }
 
     private async Task AnalyzeSubmissionAsync(string submissionId)
