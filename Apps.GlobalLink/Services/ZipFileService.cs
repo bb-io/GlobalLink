@@ -1,11 +1,6 @@
 using Blackbird.Applications.Sdk.Common.Files;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using ICSharpCode.SharpZipLib.Zip;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Apps.GlobalLink.Services;
 
@@ -17,7 +12,7 @@ public class ZipFileService(IFileManagementClient fileManagementClient) : IZipFi
     {
         using var zip = new ZipFile(zipStream);
         var files = new List<FileReference>();
-        
+
         foreach (ZipEntry entry in zip)
         {
             if (!entry.CanDecompress || entry.IsDirectory)
@@ -25,13 +20,18 @@ public class ZipFileService(IFileManagementClient fileManagementClient) : IZipFi
                 continue;
             }
 
-            using var stream = zip.GetInputStream(entry);
+            using var inflaterStream = zip.GetInputStream(entry);
+
+            using var memoryStream = new MemoryStream();
+            await inflaterStream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
             var fileName = NormalizeFileName(entry.Name);
             var uploadedFile = await _fileManagementClient.UploadAsync(
-                stream, 
-                MimeTypes.GetMimeType(fileName), 
+                memoryStream,
+                MimeTypes.GetMimeType(fileName),
                 fileName);
-                
+
             files.Add(uploadedFile);
         }
 
@@ -60,7 +60,7 @@ public class ZipFileService(IFileManagementClient fileManagementClient) : IZipFi
 
     private string NormalizeFileName(string fileName)
     {
-        if(fileName.Contains("/"))
+        if (fileName.Contains("/"))
         {
             fileName = fileName.Split('/').LastOrDefault() ?? fileName;
         }

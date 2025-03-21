@@ -47,7 +47,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     public async Task<StartSubmissionResponse> StartSubmissionAsync([ActionParameter] SubmissionRequest submissionId)
     {
         await AnalyzeSubmissionAsync(submissionId.SubmissionId);
-        await PullUntilProcessIsNotFinishedAsync(submissionId.SubmissionId);
+        await PollUntilProcessIsNotFinishedAsync(submissionId.SubmissionId);
 
         var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId.SubmissionId}/start", Method.Post, Credentials);
         var startSubmissionDto = await Client.ExecuteWithErrorHandling<StartSubmissionDto>(apiRequest);
@@ -85,7 +85,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         await Client.ExecuteWithErrorHandling(apiRequest);
     }
 
-    private async Task PullUntilProcessIsNotFinishedAsync(string submissionId)
+    private async Task PollUntilProcessIsNotFinishedAsync(string submissionId)
     {
         const int MaxRetries = 10;
         var retries = 0;

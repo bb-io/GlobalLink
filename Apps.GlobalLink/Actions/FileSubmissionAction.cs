@@ -65,7 +65,10 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
 
     private async Task<List<TargetResponse>> GetProcessedTargetsAsync(string submissionId)
     {
-        var apiRequest = new ApiRequest($"/rest/v0/targets?targetStatus=PROCESSED&submissionIds={submissionId}", Method.Get, Credentials);
+        var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
+            .AddQueryParameter("targetStatus", "PROCESSED")
+            .AddQueryParameter("submissionIds", submissionId);
+        
         var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
         if (targets.Count == 0)
         {
