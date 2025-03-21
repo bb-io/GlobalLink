@@ -34,7 +34,7 @@ public class ConnectionDefinition : IConnectionDefinition
                 },
                 new(CredNames.BasicAuthToken) 
                 { 
-                    DisplayName = "Basic Auth Token", 
+                    DisplayName = "Basic auth token", 
                     Sensitive = true,
                     Description = "The Basic Auth Token for the GlobalLink API."
                 }

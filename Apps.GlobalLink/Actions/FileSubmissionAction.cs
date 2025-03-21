@@ -48,12 +48,19 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     [Action("Download target files", Description = "Downloads a translated file from a submission.")]
     public async Task<DownloadTargetFilesResponse> DownloadTargetFilesAsync([ActionParameter] DownloadTargetFilesRequest request)
     {
-        var targets = await GetProcessedTargetsAsync(request.SubmissionId);
-        var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
-        return new DownloadTargetFilesResponse
+        try
         {
-            TargetFiles = allFiles
-        };
+            var targets = await GetProcessedTargetsAsync(request.SubmissionId);
+            var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
+            return new DownloadTargetFilesResponse
+            {
+                TargetFiles = allFiles
+            };
+        }
+        catch(Exception ex)
+        {
+            throw new PluginApplicationException($"{ex.Message}; {ex.StackTrace}");
+        }
     }
 
     private async Task<List<TargetResponse>> GetProcessedTargetsAsync(string submissionId)
@@ -64,7 +71,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         {
             throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in PROCESSED status.");
         }
-        
+
         return targets;
     }
 
@@ -74,21 +81,21 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         foreach (var target in targets)
         {
             var downloadProcessDto = await InitiateDownloadAsync(submissionId, target.TargetId);
-            
+
             if (!downloadProcessDto.ProcessingFinished)
             {
                 await PollDownloadProcessCompletionAsync(submissionId, downloadProcessDto.DownloadId);
             }
-            
+
             var downloadedFiles = await DownloadAndExtractFilesAsync(downloadProcessDto.DownloadId);
-            downloadedFiles.ForEach(file => allFiles.Add(new() 
+            downloadedFiles.ForEach(file => allFiles.Add(new()
             {
                 SourceLanguage = target.SourceLanguage,
                 TargetLanguage = target.TargetLanguage,
                 File = file
             }));
         }
-        
+
         return allFiles;
     }
 
@@ -97,7 +104,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         var downloadRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
             .AddQueryParameter("deliverableTargetIds", targetId)
             .AddQueryParameter("includeManifest", false);
-            
+
         return await Client.ExecuteWithErrorHandling<DownloadProcessDto>(downloadRequest);
     }
 
@@ -125,7 +132,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         {
             var downloadRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
                 .AddQueryParameter("downloadId", downloadId);
-                
+
             var downloadProcessDto = await Client.ExecuteWithErrorHandling<DownloadProcessDto>(downloadRequest);
 
             if (downloadProcessDto.ProcessingFinished)
