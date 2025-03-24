@@ -44,20 +44,20 @@ public class PhaseResponse
 public class PhaseTransition
 {
     [Newtonsoft.Json.JsonProperty("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [Newtonsoft.Json.JsonProperty("default")]
     public bool Default { get; set; }
 
     [Newtonsoft.Json.JsonProperty("targetPhase")]
-    public string TargetPhase { get; set; }
+    public string TargetPhase { get; set; } = string.Empty;
 }
 
 public class PhaseOwner
 {
     [Newtonsoft.Json.JsonProperty("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [Newtonsoft.Json.JsonProperty("email")]
-    public string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 }

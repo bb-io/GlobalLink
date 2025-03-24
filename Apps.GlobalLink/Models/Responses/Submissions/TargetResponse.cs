@@ -14,7 +14,7 @@ public class TargetResponse
     public string DocumentId { get; set; } = string.Empty;
 
     [JsonProperty("jobId")]
-    public string JobId { get; set; }
+    public string JobId { get; set; } = string.Empty;
 
     [JsonProperty("submissionId")]
     public string SubmissionId { get; set; } = string.Empty;
