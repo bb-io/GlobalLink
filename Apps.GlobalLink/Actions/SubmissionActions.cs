@@ -125,7 +125,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
             ["sourceLanguage"] = request.SourceLanguage,
             ["instructions"] = request.Instructions ?? string.Empty,
             ["background"] = request.Background ?? string.Empty,
-            ["claimScope"] = request.ClaimScope!,
+            ["claimScope"] = request.ClaimScope ?? "LANGUAGE",
             ["batchInfos"] = new[] { CreateBatchInfo(request) }
         };
 
@@ -148,8 +148,8 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         {
             workflowId = string.IsNullOrEmpty(request.WorkflowId) ? null : request.WorkflowId,
             targetLanguageInfos,
-            targetFormat = request.TargetFormat,
-            name = request.BatchName
+            targetFormat = request.TargetFormat ?? "TXLF",
+            name = request.BatchName ?? "Batch1"
         };
     }
 
