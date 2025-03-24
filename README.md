@@ -36,7 +36,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 
 ## Actions
 
-### Submission Management
+### Submission management
 
 - **Create submission**: Creates a new translation submission with specified source and target languages, project details, due date, and optionally configures webhooks for status notifications.
 - **Get submission**: Retrieves detailed information about a specific submission using its ID.
@@ -45,7 +45,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 
 > Note: When creating a submission, you can configure webhook notifications to receive updates when the submission is completed, cancelled, or analyzed. This is useful for triggering automated workflows when translations reach specific states.
 
-### File Management
+### File management
 
 - **Upload source file**: Uploads a source file to a submission for translation.
 - **Upload reference file**: Uploads a reference file to a submission on submission level. Reference files provide context for translators.
@@ -67,19 +67,7 @@ GlobalLink provides webhook-based event notifications that can be used to trigge
 
 > Note: These webhook events may not be received immediately after the callback and could be slightly delayed.
 
-## Working with Projects and Languages
-
-The GlobalLink Enterprise app dynamically pulls information from your account to provide dropdown menus for:
-
-- Projects available in your account
-- Source and target languages configured for a project
-- Available workflows for a project
-- Submission phases (such as Translation, Review, etc.)
-- Batch information within submissions
-
-This makes it easier to configure translation workflows without having to manually enter IDs or codes.
-
-## Translation Workflow Automation
+## Translation workflow automation
 
 A typical **GlobalLink Enterprise** translation workflow in Blackbird might include:
 
@@ -102,6 +90,26 @@ For effective automation, you'll typically need to create two additional birds w
   - Process them as needed (e.g., upload to a CMS, notify stakeholders)
 
 This workflow allows for fully automated end-to-end translation processing with minimal manual intervention.
+
+## Example
+
+Here's a simple example of how to set up a translation workflow with `GlobalLink Enterprise` and `Contentful` CMS:
+
+### Bird 1: Submission Creation and Source Upload
+![Submission creation and source upload](image/README/bird_1-1.png)
+![Uploading source files](image/README/bird_1-2.png)
+
+This bird handles creating a new submission and uploading the source files for translation.
+
+### Bird 2: Translation Processing
+![Translation with DeepL](image/README/bird_2-1.png)
+
+This bird manages the translation process using DeepL and uploads the translated files back to GlobalLink.
+
+### Bird 3: Delivery to CMS
+![Downloading and publishing to Contentful](image/README/bird_3-1.png)
+
+This bird downloads the finalized translated files and uploads them to Contentful for publishing.
 
 ## Feedback
 
