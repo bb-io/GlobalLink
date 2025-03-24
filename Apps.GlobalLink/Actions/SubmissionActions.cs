@@ -148,7 +148,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         {
             workflowId = string.IsNullOrEmpty(request.WorkflowId) ? null : request.WorkflowId,
             targetLanguageInfos,
-            targetFormat = request.TargetFormat ?? "TXLF",
+            targetFormat = request.TargetFormat ?? "NON_PARSABLE",
             name = request.BatchName ?? "Batch1"
         };
     }
