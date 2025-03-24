@@ -7,20 +7,17 @@ using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
-using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using RestSharp;
 
 namespace Apps.GlobalLink.Actions;
-
-// TODO: Implement events for webhook notifications and download source files action
 
 [ActionList]
 public class SubmissionActions(InvocationContext invocationContext) : Invocable(invocationContext)
 {
     [Action("Get submission", Description = "Retrieves a submission by its ID.")]
-    public async Task<SubmissionResponse> GetSubmissionAsync([ActionParameter] SubmissionRequest submissionId)
+    public async Task<SubmissionResponse> GetSubmissionAsync([ActionParameter] SubmissionRequest submissionRequest)
     {
-        var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId.SubmissionId}", Method.Get, Credentials);
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionRequest.SubmissionId}", Method.Get, Credentials);
         var submission = await Client.ExecuteWithErrorHandling<SubmissionResponse>(apiRequest);
         return submission;
     }
@@ -167,12 +164,13 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
             Value = request.WebhookUrl
         });
 
-        if (!string.IsNullOrEmpty(request.WebhookScope))
+        if (request.WebhookScopes != null)
         {
+            var webhookScopes = string.Join(",", request.WebhookScopes);
             metadata.Add(new KeyValueDto
             {
                 Key = "_webhookScope",
-                Value = request.WebhookScope
+                Value = webhookScopes
             });
         }
 

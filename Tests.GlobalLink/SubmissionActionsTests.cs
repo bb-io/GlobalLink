@@ -25,7 +25,7 @@ public class SubmissionActionsTests : TestBase
             TargetLanguages = new List<string> { "es-ES", "fr-FR" },
             WorkflowId = "201",
             WebhookUrl = "https://webhook.site/3ce7bc72-9dfe-4269-b4c3-a5f21a9780cd",
-            WebhookScope = "submission.completed"
+            WebhookScopes = new List<string> { "submission.completed" },
         };
 
         // Act
