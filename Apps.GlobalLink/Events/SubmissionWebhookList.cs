@@ -1,5 +1,4 @@
 using Apps.GlobalLink.Api;
-using Apps.GlobalLink.Constants;
 using Apps.GlobalLink.Events.Models;
 using Apps.GlobalLink.Models.Responses.Submissions;
 using Blackbird.Applications.Sdk.Common.Invocation;
@@ -12,19 +11,12 @@ namespace Apps.GlobalLink.Events;
 [WebhookList]
 public class SubmissionWebhookList(InvocationContext invocationContext) : Invocable(invocationContext)
 {
-    [Webhook("On submission completed", Description = "Triggered when a submission is completed. This webhook may not be received immediately after completion and could be delayed.")]
-    public async Task<WebhookResponse<SubmissionResponse>> OnSubmissionCompleted(WebhookRequest webhookRequest) =>
-        await HandleWebhookRequest(webhookRequest, ScopeConstants.SubmissionCompleted);
+    [Webhook("On submission callback received", Description = "Triggered when a submission callback is received. This webhook may not be received immediately after the callback and could be delayed.")]
+    public async Task<WebhookResponse<SubmissionResponse>> OnSubmissionCallbackReceived(WebhookRequest webhookRequest, 
+        [WebhookParameter] SubmissionCallbackReceivedRequest callbackReceivedRequest) =>
+        await HandleWebhookRequest(webhookRequest, callbackReceivedRequest.WebhookScopes);
 
-    [Webhook("On submission cancelled", Description = "Triggered when a submission is cancelled. This webhook may not be received immediately after cancellation and could be delayed.")]
-    public async Task<WebhookResponse<SubmissionResponse>> OnSubmissionCancelled(WebhookRequest webhookRequest) =>
-        await HandleWebhookRequest(webhookRequest, ScopeConstants.SubmissionCancelled);
-
-    [Webhook("On submission analyzed", Description = "Triggered when a submission is analyzed.")]
-    public async Task<WebhookResponse<SubmissionResponse>> OnSubmissionAnalyzed(WebhookRequest webhookRequest) =>
-        await HandleWebhookRequest(webhookRequest, ScopeConstants.SubmissionAnalyzed);
-
-    private async Task<WebhookResponse<SubmissionResponse>> HandleWebhookRequest(WebhookRequest webhookRequest, string expectedEventCode)
+    private async Task<WebhookResponse<SubmissionResponse>> HandleWebhookRequest(WebhookRequest webhookRequest, IEnumerable<string> expectedEventCode)
     {
         var payload = JsonConvert.DeserializeObject<SubmissionPayloadDto>(webhookRequest.Body.ToString()!);
         
@@ -33,7 +25,7 @@ public class SubmissionWebhookList(InvocationContext invocationContext) : Invoca
             throw new Exception($"[GlobalLink] Got wrong webhook payload. Payload: {webhookRequest.Body}");
         }
 
-        if (payload.EventCode != expectedEventCode)
+        if (!expectedEventCode.Contains(payload.EventCode))
         {
             return new WebhookResponse<SubmissionResponse>
             {

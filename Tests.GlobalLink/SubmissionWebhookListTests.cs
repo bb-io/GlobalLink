@@ -1,4 +1,6 @@
+using Apps.GlobalLink.Constants;
 using Apps.GlobalLink.Events;
+using Apps.GlobalLink.Events.Models;
 using Apps.GlobalLink.Models.Responses.Submissions;
 using Blackbird.Applications.Sdk.Common.Webhooks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,8 +23,11 @@ public class SubmissionWebhookListTests : TestBase
     public async Task OnSubmissionCompleted_WithValidPayload_ShouldReturnSubmissionResponse()
     {
         // Act
-        var response = await ExecuteWebhookTest("submission.completed",
-            _webhookList.OnSubmissionCompleted);
+        var response = await ExecuteWebhookTest(ScopeConstants.SubmissionCompleted,
+            request => _webhookList.OnSubmissionCallbackReceived(request, new SubmissionCallbackReceivedRequest
+            {
+                WebhookScopes = [ScopeConstants.SubmissionCompleted]
+            }));
 
         // Assert
         AssertWebhookResponse(response, "17896");
@@ -32,8 +37,11 @@ public class SubmissionWebhookListTests : TestBase
     public async Task OnSubmissionCancelled_WithValidPayload_ShouldReturnSubmissionResponse()
     {
         // Act
-        var response = await ExecuteWebhookTest("submission.cancelled",
-            _webhookList.OnSubmissionCancelled);
+        var response = await ExecuteWebhookTest(ScopeConstants.SubmissionCancelled,
+            request => _webhookList.OnSubmissionCallbackReceived(request, new SubmissionCallbackReceivedRequest
+            {
+                WebhookScopes = [ScopeConstants.SubmissionCancelled]
+            }));
 
         // Assert
         AssertWebhookResponse(response, "17896");
@@ -43,8 +51,11 @@ public class SubmissionWebhookListTests : TestBase
     public async Task OnSubmissionAnalyzed_WithValidPayload_ShouldReturnSubmissionResponse()
     {
         // Act
-        var response = await ExecuteWebhookTest("submission.analyzed",
-            _webhookList.OnSubmissionAnalyzed);
+        var response = await ExecuteWebhookTest(ScopeConstants.SubmissionAnalyzed,
+            request => _webhookList.OnSubmissionCallbackReceived(request, new SubmissionCallbackReceivedRequest
+            {
+                WebhookScopes = [ScopeConstants.SubmissionAnalyzed]
+            }));
 
         // Assert
         AssertWebhookResponse(response, "17896");
