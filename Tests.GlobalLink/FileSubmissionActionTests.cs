@@ -109,7 +109,7 @@ public class FileSubmissionActionTests : TestBase
     {
         // Arrange
         var submissionActions = new FileSubmissionAction(InvocationContext, FileManager);
-        var submissionId = "17896";
+        var submissionId = "17955";
         var phaseName = "Translation";
         
         var request = new DownloadSourceFilesRequest

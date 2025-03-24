@@ -145,17 +145,29 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
 
     private async Task<List<TargetResponse>> GetTargetsAsync(string submissionId, string targetStatus)
     {
-        var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
-            .AddQueryParameter("targetStatus", targetStatus)
-            .AddQueryParameter("submissionIds", submissionId);
-
-        var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
-        if (targets.Count == 0)
+        const int MaxRetries = 3;
+        var baseDelayMilliseconds = 5000;
+        
+        for (int retry = 0; retry < MaxRetries; retry++)
         {
-            throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in PROCESSED status.");
-        }
+            var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
+                .AddQueryParameter("targetStatus", targetStatus)
+                .AddQueryParameter("submissionIds", submissionId);
 
-        return targets;
+            var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
+            if (targets.Count > 0)
+            {
+                return targets;
+            }
+            
+            if (retry < MaxRetries - 1)
+            {
+                var delayTime = baseDelayMilliseconds * (retry + 1);
+                await Task.Delay(delayTime);
+            }
+        }
+        
+        throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in {targetStatus} status after {MaxRetries} retries.");
     }
 
     private async Task<List<DownloadFileGroupResponse>> ProcessTargetsAsync(string submissionId, List<TargetResponse> targets, string? phaseName = null)
