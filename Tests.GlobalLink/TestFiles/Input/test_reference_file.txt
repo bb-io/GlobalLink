@@ -1,0 +1,15 @@
+This is a reference file for GlobalLink testing.
+It contains terminology and phrases that should be consistent across all translations.
+
+GLOSSARY:
+- Blackbird: A software integration platform (do not translate)
+- GlobalLink: Translation management system (do not translate)
+- Connector: Software component that links two systems together
+
+STANDARD PHRASES:
+- "Please refer to the documentation for more information."
+- "Contact support if you encounter any issues."
+- "This feature is available in the premium subscription only."
+
+BRAND VOICE:
+Professional, clear, and concise. Use active voice when possible.
