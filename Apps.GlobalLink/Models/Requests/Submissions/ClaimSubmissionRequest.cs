@@ -1,4 +1,3 @@
-using System;
 using Apps.GlobalLink.Handlers;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Dynamic;
@@ -12,7 +11,4 @@ public class ClaimSubmissionRequest
 
     [Display("Phase name"), DataSource(typeof(PhaseNameForClaimableDataHandler))]
     public string PhaseName { get; set; } = string.Empty;
-
-    [Display("Target languages"), DataSource(typeof(TargetLanguageDataHandler))]
-    public IEnumerable<string> TargetLanguages { get; set; } = Array.Empty<string>();
 }

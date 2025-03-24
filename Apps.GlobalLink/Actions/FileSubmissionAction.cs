@@ -45,10 +45,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         await Client.ExecuteWithErrorHandling(apiRequest);
     }
 
-    [Action("Upload target file", Description = "Uploads a target file to a submission and waits for the process to finish successfully.")]
-    /*
-    Additional information for the documentation: The /upload/translatable endpoint takes a file and uploads it to the specified submission. It is not necessary to specify the phase name, as it is encoded in the filename. For this reason it is absolutely essential that the file name provided by GLE is not modified in any way. Changing the file name provided by GLE may result in a file that cannot be uploaded back to GLE.
-    */
+    [Action("Upload target file", Description = "Uploads a target file to a submission and waits for the process to finish successfully. Important: The file name must not be modified in any way. It is encoded in the filename and is essential for the upload process to work correctly.")]
     public async Task UploadTargetFileAsync([ActionParameter] UploadTargetFileRequest request)
     {
         var stream = await fileManagementClient.DownloadAsync(request.File);

@@ -53,21 +53,23 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     }
 
     [Action("Claim submission", Description = "Claims a submission by its ID.")]
-    public async Task ClaimSubmissionAsync([ActionParameter] ClaimSubmissionRequest submissionId)
+    public async Task ClaimSubmissionAsync([ActionParameter] ClaimSubmissionRequest claimSubmissionRequest)
     {
+        var submissionRequest = new ApiRequest($"/rest/v0/submissions/{claimSubmissionRequest.SubmissionId}", Method.Get, Credentials);
+        var response = await Client.ExecuteWithErrorHandling<SubmissionResponse>(submissionRequest);
+
         var requestBody = new[]
         {
             new 
             {
-                submissionId = submissionId.SubmissionId,
-                phaseName = submissionId.PhaseName,
-                languages = submissionId.TargetLanguages
+                submissionId = claimSubmissionRequest.SubmissionId,
+                phaseName = claimSubmissionRequest.PhaseName,
+                languages = response.TargetLanguages
             }
         };
 
         var apiRequest = new ApiRequest($"/rest/v0/submissions/claim", Method.Post, Credentials)
             .AddJsonBody(requestBody);
-            
         await Client.ExecuteWithErrorHandling(apiRequest);
     }
 

@@ -93,8 +93,7 @@ public class SubmissionActionsTests : TestBase
         var request = new ClaimSubmissionRequest
         {
             SubmissionId = submissionId,
-            PhaseName = "Translation",
-            TargetLanguages = new List<string> { "es-ES", "fr-FR" }
+            PhaseName = "Translation"
         };
 
         // Act & Assert

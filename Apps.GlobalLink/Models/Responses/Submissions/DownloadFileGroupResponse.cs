@@ -1,4 +1,3 @@
-using System;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Files;
 
@@ -12,6 +11,6 @@ public class DownloadFileGroupResponse
     [Display("Target language")]
     public string TargetLanguage { get; set; } = string.Empty;
 
-    [Display("Target file")]
+    [Display("File")]
     public FileReference File { get; set; } = default!;
 }
