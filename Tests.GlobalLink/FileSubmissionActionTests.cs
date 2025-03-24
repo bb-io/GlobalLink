@@ -82,4 +82,52 @@ public class FileSubmissionActionTests : TestBase
         Console.WriteLine($"Downloaded {result.TargetFiles.Count()} files from submission {submissionId}");
         Console.WriteLine(JsonConvert.SerializeObject(result, Formatting.Indented));
     }
+
+    [TestMethod]
+    public async Task UploadTargetFileAsync_WithValidData_ShouldUploadSuccessfully()
+    {
+        // Arrange
+        var submissionActions = new FileSubmissionAction(InvocationContext, FileManager);
+        var submissionId = "17896"; 
+        var fileName = "3 random sentences-Non-Parsable-es-ES#TR_FQQS#.txt";
+        
+        var request = new UploadTargetFileRequest
+        {
+            SubmissionId = submissionId,
+            File = new FileReference { Name = fileName }
+        };
+
+        // Act & Assert (no exceptions should be thrown)
+        await submissionActions.UploadTargetFileAsync(request);
+        
+        // Log success
+        Console.WriteLine($"Successfully uploaded target file '{fileName}' to submission with ID: {submissionId}");
+    }
+
+    [TestMethod]
+    public async Task DownloadSourceFilesAsync_WithValidData_ShouldReturnFiles()
+    {
+        // Arrange
+        var submissionActions = new FileSubmissionAction(InvocationContext, FileManager);
+        var submissionId = "17896";
+        var phaseName = "Translation";
+        
+        var request = new DownloadSourceFilesRequest
+        {
+            SubmissionId = submissionId,
+            PhaseName = phaseName
+        };
+
+        // Act
+        var result = await submissionActions.DownloadSourceFilesAsync(request);
+
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.SourceFiles);
+        Assert.IsTrue(result.SourceFiles.Any(), "No source files were downloaded");
+        
+        // Log results
+        Console.WriteLine($"Downloaded {result.SourceFiles.Count()} source files from submission {submissionId} for phase {phaseName}");
+        Console.WriteLine(JsonConvert.SerializeObject(result, Formatting.Indented));
+    }
 }

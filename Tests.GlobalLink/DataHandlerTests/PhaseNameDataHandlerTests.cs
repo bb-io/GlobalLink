@@ -7,7 +7,7 @@ namespace Tests.GlobalLink.DataHandlerTests;
 [TestClass]
 public class PhaseNameDataHandlerTests : BaseDataHandlerTests
 {
-    protected override IAsyncDataSourceItemHandler DataHandler => new PhaseNameDataHandler(InvocationContext, new() { SubmissionId = "17908"});
+    protected override IAsyncDataSourceItemHandler DataHandler => new PhaseNameForClaimableDataHandler(InvocationContext, new() { SubmissionId = "17908"});
 
     protected override string SearchString => "Translation";
 

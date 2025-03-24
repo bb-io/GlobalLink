@@ -12,7 +12,7 @@ using RestSharp;
 
 namespace Apps.GlobalLink.Actions;
 
-// TODO: Implement upload translated files, complete translation and download translated files actions. And events for webhook notifications. Implement pagination for all get items requests
+// TODO: Implement events for webhook notifications and download source files action
 
 [ActionList]
 public class SubmissionActions(InvocationContext invocationContext) : Invocable(invocationContext)

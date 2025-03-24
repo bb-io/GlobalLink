@@ -45,10 +45,40 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         await Client.ExecuteWithErrorHandling(apiRequest);
     }
 
+    [Action("Upload target file", Description = "Uploads a target file to a submission and waits for the process to finish successfully.")]
+    /*
+    Additional information for the documentation: The /upload/translatable endpoint takes a file and uploads it to the specified submission. It is not necessary to specify the phase name, as it is encoded in the filename. For this reason it is absolutely essential that the file name provided by GLE is not modified in any way. Changing the file name provided by GLE may result in a file that cannot be uploaded back to GLE.
+    */
+    public async Task UploadTargetFileAsync([ActionParameter] UploadTargetFileRequest request)
+    {
+        var stream = await fileManagementClient.DownloadAsync(request.File);
+        var bytes = await stream.GetByteData();
+
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/{request.SubmissionId}/upload/translatable", Method.Post, Credentials)
+            .AddFile("file", bytes, request.File.Name);
+
+        var process = await Client.ExecuteWithErrorHandling<ProcessDto>(apiRequest);
+        await PollForTargetFileUploadingCompletionAsync(request.SubmissionId, process.ProcessId);
+
+        var phase = await GetPhaseForFileAsync(request.SubmissionId, request.File.Name);
+        await CompletePhaseAsync(request.SubmissionId, phase);
+    }
+
+    [Action("Download source files", Description = "Downloads a source file from a submission.")]
+    public async Task<DownloadSourceFilesResponse> DownloadSourceFilesAsync([ActionParameter] DownloadSourceFilesRequest request)
+    {
+        var targets = await GetTargetsAsync(request.SubmissionId, "IN_PROCESS");
+        var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets, request.PhaseName);
+        return new DownloadSourceFilesResponse
+        {
+            SourceFiles = allFiles
+        };
+    }
+
     [Action("Download target files", Description = "Downloads a translated file from a submission.")]
     public async Task<DownloadTargetFilesResponse> DownloadTargetFilesAsync([ActionParameter] DownloadTargetFilesRequest request)
     {
-        var targets = await GetProcessedTargetsAsync(request.SubmissionId);
+        var targets = await GetTargetsAsync(request.SubmissionId, "PROCESSED");
         var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
         return new DownloadTargetFilesResponse
         {
@@ -56,10 +86,70 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         };
     }
 
-    private async Task<List<TargetResponse>> GetProcessedTargetsAsync(string submissionId)
+    private async Task CompletePhaseAsync(string submissionId, PhaseResponse phaseResponse)
+    {
+        var transition = phaseResponse.Transitions.FirstOrDefault();
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/phases/{phaseResponse.CurrentPhase}/complete", Method.Post, Credentials)
+            .AddJsonBody(new
+             { 
+                targetIds = new List<long> { long.Parse(phaseResponse.TargetId) },
+                transition = transition?.Name ?? null,
+             });
+
+        var completeDto = await Client.ExecuteWithErrorHandling<CompletePhaseDto>(apiRequest);
+        if(completeDto.FailedTargets.Length != 0)
+        {
+            var failedTargets = string.Join(", ", completeDto.FailedTargets.Select(x => x));
+            throw new PluginApplicationException($"Failed to complete phase for target IDs: {failedTargets}. Please ask blackbird support for further investigation and explanation.");
+        }
+    }
+
+    private async Task<PhaseResponse> GetPhaseForFileAsync(string submissionId, string fileName) 
+    {
+        var request = new ApiRequest($"/rest/v0/submissions/{submissionId}/phases?targetids&documentId", Method.Get, Credentials);
+        var phases = await Client.PaginateAsync<PhaseResponse>(request);
+        var phase = phases.FirstOrDefault(x => x.TargetFileName == fileName);
+        if (phase == null)
+        {
+            var allFileNames = string.Join(", ", phases.Select(x => x.TargetFileName));
+            throw new PluginApplicationException($"No target file found for submission ID {submissionId} with file name {fileName}. Please check that you didn't modified the original file name you downloaded from this app. Here are the available file names: {allFileNames}.");
+        }
+
+        return phase;
+    }
+
+    private async Task PollForTargetFileUploadingCompletionAsync(string submissionId, string processId)
+    {
+        const int MaxRetries = 30;
+        const int DelayMilliseconds = 5000;
+        var retries = 0;
+
+        while (retries < MaxRetries)
+        {
+            var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/upload/translatable/{processId}", Method.Get, Credentials);
+            var processDto = await Client.ExecuteWithErrorHandling<TranslatableUploadProcessDto>(apiRequest);
+
+            if (processDto.HasUploadSucceeded)
+            {
+                return;
+            }
+            else if(processDto.HasProcessingFailed)
+            {
+                throw new PluginApplicationException($"Upload process failed with message: {processDto.GetErrorMessage()}");
+            }
+
+            retries++;
+            await Task.Delay(DelayMilliseconds);
+        }
+
+        throw new PluginApplicationException(
+            $"Upload process timeout after {MaxRetries} attempts. Please contact blackbird support for futher investigation and explanation.");
+    }
+
+    private async Task<List<TargetResponse>> GetTargetsAsync(string submissionId, string targetStatus)
     {
         var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
-            .AddQueryParameter("targetStatus", "PROCESSED")
+            .AddQueryParameter("targetStatus", targetStatus)
             .AddQueryParameter("submissionIds", submissionId);
 
         var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
@@ -71,13 +161,15 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         return targets;
     }
 
-    private async Task<List<DownloadTargetFileGroupResponse>> ProcessTargetsAsync(string submissionId, List<TargetResponse> targets)
+    private async Task<List<DownloadFileGroupResponse>> ProcessTargetsAsync(string submissionId, List<TargetResponse> targets, string? phaseName = null)
     {
-        var allFiles = new List<DownloadTargetFileGroupResponse>();
+        var allFiles = new List<DownloadFileGroupResponse>();
         foreach (var target in targets)
         {
-            var downloadProcessDto = await InitiateDownloadAsync(submissionId, target.TargetId);
-
+            var downloadProcessDto = phaseName == null
+                ? await InitiateDeliverableDownloadAsync(submissionId, target.TargetId)
+                : await InitiateTranslatableDownloadAsync(submissionId, target.TargetId, phaseName);
+            
             if (!downloadProcessDto.ProcessingFinished)
             {
                 await PollDownloadProcessCompletionAsync(submissionId, downloadProcessDto.DownloadId);
@@ -95,10 +187,21 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         return allFiles;
     }
 
-    private async Task<DownloadProcessDto> InitiateDownloadAsync(string submissionId, string targetId)
+    private async Task<DownloadProcessDto> InitiateDeliverableDownloadAsync(string submissionId, string targetId)
     {
         var downloadRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
             .AddQueryParameter("deliverableTargetIds", targetId)
+            .AddQueryParameter("includeManifest", false);
+
+        return await Client.ExecuteWithErrorHandling<DownloadProcessDto>(downloadRequest);
+    }
+
+    private async Task<DownloadProcessDto> InitiateTranslatableDownloadAsync(string submissionId, string targetId, string phaseName)
+    {
+        var downloadRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
+            .AddQueryParameter("translatableFiles", true)
+            .AddQueryParameter("phaseName", phaseName)
+            .AddQueryParameter("targetIds", targetId)
             .AddQueryParameter("includeManifest", false);
 
         return await Client.ExecuteWithErrorHandling<DownloadProcessDto>(downloadRequest);
