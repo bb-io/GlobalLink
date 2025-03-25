@@ -96,14 +96,18 @@ This workflow allows for fully automated end-to-end translation processing with 
 Here's a simple example of how to set up a translation workflow with `GlobalLink Enterprise` and `Contentful` CMS:
 
 ### Bird 1: Submission creation and source upload
+![Submission creation and upload](image/README/bird_1-1.png)
+![Uploading files](image/README/bird_1-2.png)
 
 This bird handles creating a new submission and uploading the source files for translation.
 
 ### Bird 2: Translation processing
+![Translation process with DeepL](image/README/bird_2-1.png)
 
 This bird manages the translation process using DeepL and uploads the translated files back to GlobalLink.
 
 ### Bird 3: Delivery to CMS
+![Downloading and pushing to Contentful](image/README/bird_3-1.png)
 
 This bird downloads the finalized translated files and uploads them to Contentful for publishing.
 
