@@ -105,11 +105,19 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     {
         var request = new ApiRequest($"/rest/v0/submissions/{submissionId}/phases?targetids&documentId", Method.Get, Credentials);
         var phases = await Client.PaginateAsync<PhaseResponse>(request);
-        var phase = phases.FirstOrDefault(x => x.TargetFileName == fileName);
+        
+        var fileNameWithoutTxlf = fileName.EndsWith(".txlf", StringComparison.OrdinalIgnoreCase) 
+            ? fileName.Substring(0, fileName.Length - 5) 
+            : fileName;
+        
+        var phase = phases.FirstOrDefault(x => 
+            string.Equals(x.TargetFileName, fileName, StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(x.TargetFileName, fileNameWithoutTxlf, StringComparison.OrdinalIgnoreCase));
+        
         if (phase == null)
         {
             var allFileNames = string.Join(", ", phases.Select(x => x.TargetFileName));
-            throw new PluginApplicationException($"No target file found for submission ID {submissionId} with file name {fileName}. Please check that you didn't modified the original file name you downloaded from this app. Here are the available file names: {allFileNames}.");
+            throw new PluginApplicationException($"No target file found for submission ID {submissionId} with file name {fileName}. Please check that you didn't modify the original file name you downloaded from this app. Here are the available file names: {allFileNames}.");
         }
 
         return phase;
