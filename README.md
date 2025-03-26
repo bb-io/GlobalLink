@@ -38,7 +38,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 
 ### Submission management
 
-- **Create submission**: Creates a new translation submission with specified source and target languages, project details, due date, and optionally configures webhooks for status notifications.
+- **Create submission**: Creates a new translation submission with specified source and target languages, project details and due date.
 > **Important**: When creating a submission, you can set the `Target format` parameter. By default it's set to `TXLF`, which is GlobalLink's recommended format. This converts supported files to TXLF format (XLIFF 1.2 with GlobalLink extensions) which you'll receive when downloading source files. If you prefer to work with original file formats, set `Target format` to `Non parsable`.
 - **Get submission**: Retrieves detailed information about a specific submission using its ID.
 - **Start submission**: First analyzes and then starts a submission, initiating the translation workflow process.
@@ -72,7 +72,7 @@ A typical **GlobalLink Enterprise** translation workflow in Blackbird might incl
 5. Claiming the submission for processing
 6. Using polling events to monitor the submission status
 
-For effective automation, you'll typically need to create two additional birds with the **On submission callback received** event:
+For effective automation, you'll typically need to use next polling events:
 
 - **First bird (or checkpoint)**: Triggered by `On submission created` event
   - Download source files
