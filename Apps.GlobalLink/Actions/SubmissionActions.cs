@@ -129,7 +129,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
             ["batchInfos"] = new[] { CreateBatchInfo(request) }
         };
 
-        var metadata = CreateMetadata(request);
+        var metadata = new List<KeyValueDto>();
         if (metadata.Any())
         {
             bodyDictionary["metadata"] = metadata;
@@ -151,31 +151,5 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
             targetFormat = request.TargetFormat ?? "NON_PARSABLE",
             name = request.BatchName ?? "Batch1"
         };
-    }
-
-    private static List<KeyValueDto> CreateMetadata(CreateSubmissionRequest request)
-    {
-        var metadata = new List<KeyValueDto>();
-        
-        if (string.IsNullOrEmpty(request.WebhookUrl)) 
-            return metadata;
-            
-        metadata.Add(new KeyValueDto
-        {
-            Key = "_webhookURL",
-            Value = request.WebhookUrl
-        });
-
-        if (request.WebhookScopes != null)
-        {
-            var webhookScopes = string.Join(",", request.WebhookScopes);
-            metadata.Add(new KeyValueDto
-            {
-                Key = "_webhookScope",
-                Value = webhookScopes
-            });
-        }
-
-        return metadata;
     }
 }
