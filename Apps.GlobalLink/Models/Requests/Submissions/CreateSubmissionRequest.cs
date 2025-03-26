@@ -38,12 +38,6 @@ public class CreateSubmissionRequest : ProjectRequest
      [Display("Due date")]
      public DateTime DueDate { get; set; }
 
-     [Display("Webhook URL", Description = "Webhook URL for callback notifications")]
-     public string? WebhookUrl { get; set; }
-
-     [Display("Webhook scopes"), StaticDataSource(typeof(WebhookScopeStaticDataHandler))]
-     public IEnumerable<string>? WebhookScopes { get; set; }
-
      public void ThrowIfInvalid()
      {
           if (string.IsNullOrEmpty(Name))
@@ -64,11 +58,6 @@ public class CreateSubmissionRequest : ProjectRequest
           if (TargetLanguages == null || !TargetLanguages.Any())
           {
                throw new PluginMisconfigurationException("'Target languages' input is either empty or null. Please provide a valid target language.");
-          }
-
-          if (!string.IsNullOrEmpty(WebhookUrl) && WebhookScopes == null)
-          {
-               throw new PluginMisconfigurationException("If 'Webhook URL' is provided, 'Webhook scopes' must also be provided, but it is null. Please provide a valid Webhook scopes.");
           }
      }
 }

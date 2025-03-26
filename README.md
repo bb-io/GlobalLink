@@ -58,16 +58,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 
 ## Events
 
-GlobalLink provides webhook-based event notifications that can be used to trigger workflows in Blackbird:
-
-- **On submission callback received**: Triggered when a submission callback is received from GlobalLink. This event can be configured to listen for specific state changes:
-  - `submission.completed`: Triggered when a submission is fully completed
-  - `submission.cancelled`: Triggered when a submission is cancelled
-  - `submission.analyzed`: Triggered when a submission analysis is completed
-
-> Note: These webhook events may not be received immediately after the callback and could be slightly delayed.
-
-GlobalLink also provides polling-based events for monitoring submissions:
+GlobalLink Enterprise app provides polling-based events for monitoring submissions:
 - **On submission created**: A polling event that periodically checks for new submissions. This event triggers only for submissions with the status `Active` that have been claimed by the user, ensuring they're ready for translation processing.
 - **On submission completed**: A polling event that periodically checks for completed submissions. If completed submissions are found, the event is triggered.
 
@@ -80,16 +71,16 @@ A typical **GlobalLink Enterprise** translation workflow in Blackbird might incl
 3. Optionally adding reference materials to assist translators
 4. Starting the submission to begin the translation process
 5. Claiming the submission for processing
-6. Using webhooks to monitor the submission status
+6. Using polling events to monitor the submission status
 
 For effective automation, you'll typically need to create two additional birds with the **On submission callback received** event:
 
-- **First bird**: Triggered by `submission.analyzed`
+- **First bird (or checkpoint)**: Triggered by `On submission created` event
   - Download source files
   - Translate them using your preferred translation app (e.g., DeepL)
   - Upload the translated files back to the submission
 
-- **Second bird**: Triggered by `submission.completed`
+- **Second bird (or checkpoint)**: Triggered by `On submission completed`
   - Download the finalized translated files
   - Process them as needed (e.g., upload to a CMS, notify stakeholders)
 
