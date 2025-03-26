@@ -19,7 +19,7 @@ public class SubmissionPollingList(InvocationContext invocationContext) : Invoca
         PollingEventRequest<SubmissionMemory> request,
         [PollingEventParameter] SubmissionOptionalRequest submissionOptionalRequest) => HandlePollingEventAsync(request, submissionOptionalRequest, InProcessStatus);
 
-    [PollingEvent("On submission completed", Description = "Polling event that periodically checks for completed submissions. If completed submissions are found, the event is triggered.")]
+    [PollingEvent("On submissions completed", Description = "Polling event that periodically checks for completed submissions. If completed submissions are found, the event is triggered.")]
     public Task<PollingEventResponse<SubmissionMemory, SearchSubmissionResponse>> OnSubmissionCompletedAsync(
         PollingEventRequest<SubmissionMemory> request,
         [PollingEventParameter] SubmissionOptionalRequest submissionOptionalRequest) => HandlePollingEventAsync(request, submissionOptionalRequest, ProcessedStatus);
