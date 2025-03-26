@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <Product>GlobalLink Enterprise [Beta]</Product>
         <Description>GlobalLink is a cloud-based, vendor-agnostic technology platform that optimizes translation management for Enterprise and SMB companies. It helps users in delivering and maintaining multilingual websites quickly and affordably. GlobalLink is trusted by thousands of businesses in producing results, streamlining project management, driving efficiency, and accelerating the time to market in translation work.</Description>
-        <Version>1.0.2</Version>
+        <Version>1.0.3</Version>
         <AssemblyName>Apps.GlobalLink</AssemblyName>
         <RootNamespace>Apps.GlobalLink</RootNamespace>
     </PropertyGroup>
