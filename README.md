@@ -67,6 +67,10 @@ GlobalLink provides webhook-based event notifications that can be used to trigge
 
 > Note: These webhook events may not be received immediately after the callback and could be slightly delayed.
 
+GlobalLink also provides polling-based events for monitoring submissions:
+- **On submission created**: A polling event that periodically checks for new submissions. This event triggers only for submissions with the status `Active` that have been claimed by the user, ensuring they're ready for translation processing.
+- **On submission completed**: A polling event that periodically checks for completed submissions. If completed submissions are found, the event is triggered.
+
 ## Translation workflow automation
 
 A typical **GlobalLink Enterprise** translation workflow in Blackbird might include:
