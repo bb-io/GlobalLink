@@ -26,8 +26,8 @@ public class CreateSubmissionRequest : ProjectRequest
      [Display("Workflow ID"), DataSource(typeof(WorkflowDataHandler))]
      public string? WorkflowId { get; set; }
 
-     [Display("Target format", Description = "By default we will use 'NON_PARSABLE' parameter"), StaticDataSource(typeof(TargetFormatStaticDataHandler))]
-     public string? TargetFormat { get; set; } = "NON_PARSABLE";
+     [Display("Target format", Description = "By default we will use 'TXLF' parameter"), StaticDataSource(typeof(TargetFormatStaticDataHandler))]
+     public string? TargetFormat { get; set; } = "TXLF";
 
      [Display("Batch name", Description = "By default we will use 'Batch1' parameter")]
      public string? BatchName { get; set; } = "Batch1";

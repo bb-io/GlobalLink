@@ -39,11 +39,10 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 ### Submission management
 
 - **Create submission**: Creates a new translation submission with specified source and target languages, project details, due date, and optionally configures webhooks for status notifications.
+> **Important**: When creating a submission, you can set the `Target format` parameter. By default it's set to `TXLF`, which is GlobalLink's recommended format. This converts supported files to TXLF format (XLIFF 1.2 with GlobalLink extensions) which you'll receive when downloading source files. If you prefer to work with original file formats, set `Target format` to `Non parsable`.
 - **Get submission**: Retrieves detailed information about a specific submission using its ID.
 - **Start submission**: First analyzes and then starts a submission, initiating the translation workflow process.
 - **Claim submission**: Claims a submission for processing at a specific phase.
-
-> Note: When creating a submission, you can configure webhook notifications to receive updates when the submission is completed, cancelled, or analyzed. This is useful for triggering automated workflows when translations reach specific states.
 
 ### File management
 
@@ -90,21 +89,16 @@ This workflow allows for fully automated end-to-end translation processing with 
 
 Here's a simple example of how to set up a translation workflow with `GlobalLink Enterprise` and `Contentful` CMS:
 
-### Bird 1: Submission creation and source upload
+### Part 1: Submission creation and source upload
 ![Submission creation and upload](image/README/bird_1-1.png)
-![Uploading files](image/README/bird_1-2.png)
 
-This bird handles creating a new submission and uploading the source files for translation.
+### Part 2: Starting the submission and translation processing
+![Translation process with OpenAI](image/README/bird_1-2.png)
 
-### Bird 2: Translation processing
-![Translation process with DeepL](image/README/bird_2-1.png)
+### Part 3: Delivery to CMS
+![Downloading and pushing to Contentful](image/README/bird_1-3.png)
 
-This bird manages the translation process using DeepL and uploads the translated files back to GlobalLink.
-
-### Bird 3: Delivery to CMS
-![Downloading and pushing to Contentful](image/README/bird_3-1.png)
-
-This bird downloads the finalized translated files and uploads them to Contentful for publishing.
+This bird uses `On submission completed` checkpoint to trigger once the translation is finished. It downloads the translated files and pushes them to a Contentful CMS.
 
 ## Feedback
 
