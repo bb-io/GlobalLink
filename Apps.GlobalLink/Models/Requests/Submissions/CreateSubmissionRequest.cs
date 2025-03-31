@@ -10,15 +10,19 @@ namespace Apps.GlobalLink.Models.Requests.Submissions;
 
 public class CreateSubmissionRequest : ProjectRequest
 {
+     [Display("Project ID"), DataSource(typeof(ProjectDataHandler))]
+     public override string ProjectId { get; set; } = string.Empty;
+
      [Display("Name")]
      public string Name { get; set; } = string.Empty;
 
      [Display("Source language"), DataSource(typeof(SourceLanguageDataHandler))]
      public string SourceLanguage { get; set; } = string.Empty;
 
-     [Display("Targaet languages"), DataSource(typeof(TargetLanguageDataHandler))]
+     [Display("Target languages"), DataSource(typeof(TargetLanguageDataHandler))]
      public IEnumerable<string> TargetLanguages { get; set; } = new List<string>();
 
+     [Display("Instructions")]
      public string? Instructions { get; set; }
 
      public string? Background { get; set; }
@@ -32,7 +36,7 @@ public class CreateSubmissionRequest : ProjectRequest
      [Display("Batch name", Description = "By default we will use 'Batch1' parameter")]
      public string? BatchName { get; set; } = "Batch1";
 
-     [Display("Claim scope", Description = "By deault we will use 'LANGUAGE' parameter"), StaticDataSource(typeof(ClaimScopeStaticDataHandler))]
+     [Display("Claim scope", Description = "By default we will use 'Language' parameter"), StaticDataSource(typeof(ClaimScopeStaticDataHandler))]
      public string? ClaimScope { get; set; } = "LANGUAGE";
 
      [Display("Due date")]

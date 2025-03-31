@@ -14,6 +14,55 @@ namespace Apps.GlobalLink.Actions;
 [ActionList]
 public class SubmissionActions(InvocationContext invocationContext) : Invocable(invocationContext)
 {
+    [Action("Search submissions", Description = "Searches for submissions based on various criteria such as due date, date started, status, and owner.")]
+    public async Task<SearchSubmissionResponse> SearchSubmissionsAsync([ActionParameter] SearchSubmissionsRequest request)
+    {
+        var apiRequest = new ApiRequest("/rest/v0/submissions", Method.Get, Credentials);
+
+        if (request.DueDateFrom.HasValue)
+        {
+            apiRequest.AddQueryParameter("dueDateFrom",
+                UnixTimestampConverter.ToUnixTimestamp(request.DueDateFrom.Value).ToString());
+        }
+
+        if (request.DueDateTo.HasValue)
+        {
+            apiRequest.AddQueryParameter("dueDateTo",
+                UnixTimestampConverter.ToUnixTimestamp(request.DueDateTo.Value).ToString());
+        }
+
+        if (!string.IsNullOrEmpty(request.Status))
+        {
+            apiRequest.AddQueryParameter("statuses", request.Status);
+        }
+
+        var submissions = await Client.PaginateAsync<SubmissionResponse>(apiRequest);
+        var result = submissions;
+
+        if (!string.IsNullOrEmpty(request.OwnerId))
+        {
+            result = submissions
+                .Where(s => s.Owners?.Any(o => string.Equals(o.UserId, request.OwnerId, StringComparison.OrdinalIgnoreCase)) == true)
+                .ToList();
+        }
+
+        if(request.DateStartedFrom.HasValue)
+        {
+            result = result
+                .Where(s => s.DateStarted >= request.DateStartedFrom.Value)
+                .ToList();
+        }
+
+        if(request.DateStartedTo.HasValue)
+        {
+            result = result
+                .Where(s => s.DateStarted <= request.DateStartedTo.Value)
+                .ToList();
+        }
+
+        return new SearchSubmissionResponse(result);
+    }
+
     [Action("Get submission", Description = "Retrieves a submission by its ID.")]
     public async Task<SubmissionResponse> GetSubmissionAsync([ActionParameter] SubmissionRequest submissionRequest)
     {
@@ -60,7 +109,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
 
         var requestBody = new[]
         {
-            new 
+            new
             {
                 submissionId = claimSubmissionRequest.SubmissionId,
                 phaseName = claimSubmissionRequest.PhaseName,
@@ -76,8 +125,8 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     private async Task SaveSubmissionAsync(string submissionId, bool autoStart)
     {
         var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/save", Method.Post, Credentials)
-            .AddJsonBody(new 
-            { 
+            .AddJsonBody(new
+            {
                 autoStart
             });
 

@@ -89,6 +89,9 @@ public class SubmissionResponse
 
     [DefinitionIgnore]
     public List<BatchInfo> BatchInfos { get; set; } = new();
+
+    [Display("Owners")]
+    public List<UserResponse> Owners { get; set; } = new();
 }
 
 public class UserInfo

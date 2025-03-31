@@ -98,4 +98,127 @@ public class SubmissionActionsTests : TestBase
         await submissionActions.ClaimSubmissionAsync(request);
         Console.WriteLine($"Successfully claimed submission with ID: {submissionId}, for phase: Translation, with languages: es-ES, fr-FR");
     }
+
+    [TestMethod]
+    public async Task SearchSubmissionsAsync_WithValidCriteria_ShouldReturnResults()
+    {
+        // Arrange
+        var submissionActions = new SubmissionActions(InvocationContext);
+        
+        var request = new SearchSubmissionsRequest
+        {
+            DueDateFrom = DateTime.UtcNow.AddDays(-30),
+            DueDateTo = DateTime.UtcNow.AddDays(30),
+            Status = "CANCELLED" 
+        };
+
+        // Act
+        var result = await submissionActions.SearchSubmissionsAsync(request);
+
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Submissions);
+        
+        // Log results
+        Console.WriteLine($"Found {result.TotalCount} submissions matching the criteria");
+        Console.WriteLine($"Search results: {JsonConvert.SerializeObject(result.Submissions.Take(5), Formatting.Indented)}");
+        
+        // Verify submissions meet criteria
+        if (result.TotalCount > 0)
+        {
+            foreach (var submission in result.Submissions)
+            {
+                if (!string.IsNullOrEmpty(request.Status))
+                {
+                    Assert.AreEqual(request.Status, submission.Status);
+                }
+                
+                if (request.DueDateFrom.HasValue)
+                {
+                    Assert.IsTrue(submission.DueDate >= request.DueDateFrom.Value);
+                }
+                
+                if (request.DueDateTo.HasValue)
+                {
+                    Assert.IsTrue(submission.DueDate <= request.DueDateTo.Value);
+                }
+            }
+        }
+    }
+    
+    [TestMethod]
+    public async Task SearchSubmissionsAsync_WithDateStartedCriteria_ShouldReturnMatchingResults()
+    {
+        // Arrange
+        var submissionActions = new SubmissionActions(InvocationContext);
+        
+        var request = new SearchSubmissionsRequest
+        {
+            DateStartedFrom = DateTime.UtcNow.AddDays(-30),
+            DateStartedTo = DateTime.UtcNow
+        };
+
+        // Act
+        var result = await submissionActions.SearchSubmissionsAsync(request);
+
+        // Assert
+        Assert.IsNotNull(result);
+        
+        // Log results
+        Console.WriteLine($"Found {result.TotalCount} submissions started within the last 30 days");
+        
+        if (result.TotalCount > 0)
+        {
+            Console.WriteLine($"Sample submission: {JsonConvert.SerializeObject(result.Submissions.First(), Formatting.Indented)}");
+            
+            // Verify date started is within range
+            foreach (var submission in result.Submissions)
+            {
+                if (request.DateStartedFrom.HasValue && submission.Started)
+                {
+                    Assert.IsTrue(submission.DateStarted >= request.DateStartedFrom.Value);
+                }
+                
+                if (request.DateStartedTo.HasValue && submission.Started)
+                {
+                    Assert.IsTrue(submission.DateStarted <= request.DateStartedTo.Value);
+                }
+            }
+        }
+    }
+    
+    [TestMethod]
+    public async Task SearchSubmissionsAsync_WithOwnerCriteria_ShouldReturnMatchingResults()
+    {
+        // Arrange
+        var submissionActions = new SubmissionActions(InvocationContext);
+        var expectedUserId = "576";
+        
+        var initialRequest = new SearchSubmissionsRequest
+        {
+            OwnerId = expectedUserId
+        };
+
+        // Act
+        var result = await submissionActions.SearchSubmissionsAsync(initialRequest);
+        
+        if (result.TotalCount == 0)
+        {
+            Assert.Inconclusive("No submissions found to test owner search criteria");
+            return;
+        }
+
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Submissions);
+        Assert.IsTrue(result.Submissions.All(s => s.Owners?.Any(o => string.Equals(o.UserId, expectedUserId, StringComparison.OrdinalIgnoreCase)) == true),
+            $"Not all submissions are owned by user with ID: {expectedUserId}");
+
+        // Log results
+        Console.WriteLine($"Found {result.TotalCount} submissions owned by {expectedUserId}");
+        if (result.TotalCount > 0)
+        {
+            Console.WriteLine($"Sample submission: {JsonConvert.SerializeObject(result.Submissions.First(), Formatting.Indented)}");
+        }
+    }
 }
