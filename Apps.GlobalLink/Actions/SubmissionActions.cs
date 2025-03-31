@@ -31,18 +31,6 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
                 UnixTimestampConverter.ToUnixTimestamp(request.DueDateTo.Value).ToString());
         }
 
-        if (request.DateStartedFrom.HasValue)
-        {
-            apiRequest.AddQueryParameter("dateStartedFrom",
-                UnixTimestampConverter.ToUnixTimestamp(request.DateStartedFrom.Value).ToString());
-        }
-
-        if (request.DateStartedTo.HasValue)
-        {
-            apiRequest.AddQueryParameter("dateStartedTo",
-                UnixTimestampConverter.ToUnixTimestamp(request.DateStartedTo.Value).ToString());
-        }
-
         if (!string.IsNullOrEmpty(request.Status))
         {
             apiRequest.AddQueryParameter("statuses", request.Status);
@@ -55,6 +43,20 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         {
             result = submissions
                 .Where(s => s.Owners?.Any(o => string.Equals(o.UserId, request.OwnerId, StringComparison.OrdinalIgnoreCase)) == true)
+                .ToList();
+        }
+
+        if(request.DateStartedFrom.HasValue)
+        {
+            result = result
+                .Where(s => s.DateStarted >= request.DateStartedFrom.Value)
+                .ToList();
+        }
+
+        if(request.DateStartedTo.HasValue)
+        {
+            result = result
+                .Where(s => s.DateStarted <= request.DateStartedTo.Value)
                 .ToList();
         }
 
