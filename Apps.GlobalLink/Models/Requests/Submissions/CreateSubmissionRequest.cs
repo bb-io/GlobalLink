@@ -22,6 +22,7 @@ public class CreateSubmissionRequest : ProjectRequest
      [Display("Target languages"), DataSource(typeof(TargetLanguageDataHandler))]
      public IEnumerable<string> TargetLanguages { get; set; } = new List<string>();
 
+     [Display("Instructions")]
      public string? Instructions { get; set; }
 
      public string? Background { get; set; }
