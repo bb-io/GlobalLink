@@ -38,6 +38,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 
 ### Submission management
 
+- **Search submission**: Searches for submissions based on various criteria such as due date, date started, status, and owner.
 - **Create submission**: Creates a new translation submission with specified source and target languages, project details and due date.
 > **Important**: When creating a submission, you can set the `Target format` parameter. By default it's set to `TXLF`, which is GlobalLink's recommended format. This converts supported files to TXLF format (XLIFF 1.2 with GlobalLink extensions) which you'll receive when downloading source files. If you prefer to work with original file formats, set `Target format` to `Non parsable`.
 - **Get submission**: Retrieves detailed information about a specific submission using its ID.

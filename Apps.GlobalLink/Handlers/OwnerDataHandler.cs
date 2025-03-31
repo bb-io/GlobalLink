@@ -1,5 +1,6 @@
 using Apps.GlobalLink.Api;
 using Apps.GlobalLink.Models.Requests.Submissions;
+using Apps.GlobalLink.Models.Responses;
 using Apps.GlobalLink.Models.Responses.Submissions;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Dynamic;
@@ -21,7 +22,7 @@ public class OwnerDataHandler(InvocationContext invocationContext, [ActionParame
         var request = new ApiRequest($"/rest/v0/projects/{submissionRequest.ProjectId}/users/org", Method.Get, Credentials);
         var apiClient = new ApiClient(Credentials);
 
-        var response = await apiClient.PaginateAsync<OwnerResponse>(request);
+        var response = await apiClient.PaginateAsync<UserResponse>(request);
         return response.Where(x => string.IsNullOrEmpty(context.SearchString) || x.UserName.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
             .Select(x => new DataSourceItem(x.UserId, x.UserName))
             .ToList();

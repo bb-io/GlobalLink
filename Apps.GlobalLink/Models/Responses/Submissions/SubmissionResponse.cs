@@ -91,7 +91,7 @@ public class SubmissionResponse
     public List<BatchInfo> BatchInfos { get; set; } = new();
 
     [Display("Owners")]
-    public List<OwnerResponse> Owners { get; set; } = new();
+    public List<UserResponse> Owners { get; set; } = new();
 }
 
 public class UserInfo
@@ -177,31 +177,4 @@ public class TechTracking
     public string? AdaptorVersion { get; set; }
     public string? ClientVersion { get; set; }
     public string? TechnologyProduct { get; set; }
-}
-
-public class OwnerResponse
-{
-    [Display("First name")]
-    public string FirstName { get; set; } = string.Empty;
-    
-    [Display("Last name")]
-    public string LastName { get; set; } = string.Empty;
-    
-    [Display("Email")]
-    public string Email { get; set; } = string.Empty;
-
-    [Display("Enabled")]
-    public bool Enabled { get; set; }
-    
-    [Display("Username")]
-    public string UserName { get; set; } = string.Empty;
-    
-    [Display("User type")]
-    public string UserType { get; set; } = string.Empty;
-    
-    [Display("User ID")]
-    public string UserId { get; set; } = string.Empty;
-    
-    [Display("SSO user")]
-    public bool SsoUser { get; set; }
 }
