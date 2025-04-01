@@ -221,4 +221,21 @@ public class SubmissionActionsTests : TestBase
             Console.WriteLine($"Sample submission: {JsonConvert.SerializeObject(result.Submissions.First(), Formatting.Indented)}");
         }
     }
+
+    [TestMethod]
+    public async Task CancelSubmissionAsync_WithValidId_ShouldNotThrowException()
+    {
+        // Arrange
+        var submissionActions = new SubmissionActions(InvocationContext);
+        var submissionId = "18035";
+        
+        var request = new SubmissionRequest
+        {
+            SubmissionId = submissionId
+        };
+
+        // Act & Assert - verify no exception is thrown
+        await submissionActions.CancelSubmissionAsync(request);
+        Console.WriteLine($"Successfully cancelled submission with ID: {submissionId}");
+    }
 }
