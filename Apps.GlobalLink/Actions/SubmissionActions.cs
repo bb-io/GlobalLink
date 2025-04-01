@@ -122,6 +122,13 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         await Client.ExecuteWithErrorHandling(apiRequest);
     }
 
+    [Action("Cancel submission", Description = "Cancels a submission by its ID.")]
+    public async Task CancelSubmissionAsync([ActionParameter] SubmissionRequest submissionId)
+    {
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/cancel/{submissionId.SubmissionId}", Method.Post, Credentials);
+        await Client.ExecuteWithErrorHandling(apiRequest);
+    }
+
     private async Task SaveSubmissionAsync(string submissionId, bool autoStart)
     {
         var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/save", Method.Post, Credentials)

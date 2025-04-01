@@ -44,6 +44,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 - **Get submission**: Retrieves detailed information about a specific submission using its ID.
 - **Start submission**: First analyzes and then starts a submission, initiating the translation workflow process.
 - **Claim submission**: Claims a submission for processing at a specific phase.
+- **Cancel submission**: Cancels a submission based on its ID.
 
 ### File management
 
