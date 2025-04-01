@@ -46,6 +46,13 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
                 .ToList();
         }
 
+        if(request.ExcludeSubmissionsWithOwnersAssigned == true)
+        {
+            result = result
+                .Where(s => s.Owners == null || s.Owners.Count == 0)
+                .ToList();
+        }
+
         if(request.DateStartedFrom.HasValue)
         {
             result = result
@@ -123,7 +130,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     }
 
     [Action("Cancel submission", Description = "Cancels a submission by its ID.")]
-    public async Task CancelSubmissionAsync([ActionParameter] SubmissionRequest submissionId)
+    public async Task CancelSubmissionAsync([ActionParameter] CancelSubmissionRequest submissionId)
     {
         var apiRequest = new ApiRequest($"/rest/v0/submissions/cancel/{submissionId.SubmissionId}", Method.Post, Credentials);
         await Client.ExecuteWithErrorHandling(apiRequest);
