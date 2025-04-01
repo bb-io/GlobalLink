@@ -28,4 +28,7 @@ public class SearchSubmissionsRequest
     
     [Display("Owner ID"), DataSource(typeof(OwnerDataHandler))]
     public string? OwnerId { get; set; }
+
+    [Display("Exclude submissions with owners assigned")]
+    public bool? ExcludeSubmissionsWithOwnersAssigned { get; set; }
 }

@@ -186,6 +186,37 @@ public class SubmissionActionsTests : TestBase
             }
         }
     }
+
+    
+    [TestMethod]
+    public async Task SearchSubmissionsAsync_WithoutOwners_ShouldReturnMatchingResults()
+    {
+        // Arrange
+        var submissionActions = new SubmissionActions(InvocationContext);
+        
+        var request = new SearchSubmissionsRequest
+        {
+            ExcludeSubmissionsWithOwnersAssigned = true
+        };
+
+        // Act
+        var result = await submissionActions.SearchSubmissionsAsync(request);
+
+        // Assert
+        Assert.IsNotNull(result);
+        
+        // Log results
+        Console.WriteLine($"Found {result.TotalCount} submissions");
+        
+        if (result.TotalCount > 0)
+        {
+            Console.WriteLine($"Sample submission: {JsonConvert.SerializeObject(result.Submissions.Select(x => new{x.SubmissionId, x.Owners}), Formatting.Indented)}");
+            result.Submissions.ForEach(submission =>
+            {
+                Assert.IsTrue(submission.Owners == null || submission.Owners.Count == 0, "Submission has owners assigned when it should not.");
+            });
+        }
+    }
     
     [TestMethod]
     public async Task SearchSubmissionsAsync_WithOwnerCriteria_ShouldReturnMatchingResults()
@@ -229,7 +260,7 @@ public class SubmissionActionsTests : TestBase
         var submissionActions = new SubmissionActions(InvocationContext);
         var submissionId = "18035";
         
-        var request = new SubmissionRequest
+        var request = new CancelSubmissionRequest
         {
             SubmissionId = submissionId
         };
