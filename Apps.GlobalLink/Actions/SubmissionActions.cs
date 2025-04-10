@@ -17,8 +17,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     [Action("Search submissions", Description = "Searches for submissions based on various criteria such as due date, date started, status, and owner.")]
     public async Task<SearchSubmissionResponse> SearchSubmissionsAsync([ActionParameter] SearchSubmissionsRequest request)
     {
-        var apiRequest = new ApiRequest("/rest/v0/submissions", Method.Get, Credentials)
-            .AddQueryParameter("getBatchInfos", "true");
+        var apiRequest = new ApiRequest("/rest/v0/submissions", Method.Get, Credentials);
 
         if (request.DueDateFrom.HasValue)
         {
