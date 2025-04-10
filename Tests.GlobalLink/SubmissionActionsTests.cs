@@ -71,7 +71,7 @@ public class SubmissionActionsTests : TestBase
         var submissionActions = new SubmissionActions(InvocationContext);
         var submissionId = "17908"; 
 
-        var request = new SubmissionRequest
+        var request = new StartSubmissionRequest
         {
             SubmissionId = submissionId
         };
