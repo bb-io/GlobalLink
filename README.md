@@ -62,7 +62,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 ### Submission Events
 
 GlobalLink Enterprise app provides polling-based events for monitoring submissions:
-- **On submission created**: A polling event that periodically checks for new submissions. This event triggers only for submissions with the status `Active` that have been claimed by the user, ensuring they're ready for translation processing.
+- **On submissions claimed**: A polling event that periodically checks for new claimed submissions. This event triggers only for submissions with the status `Active` that have been claimed by the user, ensuring they're ready for translation processing.
 - **On submission completed**: A polling event that periodically checks for completed submissions. If completed submissions are found, the event is triggered.
 
 ### User Events
@@ -82,7 +82,7 @@ A typical **GlobalLink Enterprise** translation workflow in Blackbird might incl
 
 For effective automation, you'll typically need to use next polling events:
 
-- **First bird (or checkpoint)**: Triggered by `On submission created` event
+- **First bird (or checkpoint)**: Triggered by `On submission claimed` event
   - Download source files
   - Translate them using your preferred translation app (e.g., DeepL)
   - Upload the translated files back to the submission
