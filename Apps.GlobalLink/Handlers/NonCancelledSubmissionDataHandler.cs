@@ -11,8 +11,6 @@ public class NonCancelledSubmissionDataHandler(InvocationContext invocationConte
         "PREFLIGHT",
         "READY",
         "IN_PROCESS",
-        "PROCESSED",
-        "DELIVERED",
         "PROCESSING",
         "IN_ERROR",
         "ARCHIVED"
