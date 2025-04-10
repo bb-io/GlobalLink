@@ -2,14 +2,26 @@ using Newtonsoft.Json;
 
 namespace Apps.GlobalLink.Utils;
 
-public class UnixTimestampConverter : JsonConverter<DateTime>
+public class UnixTimestampConverter : JsonConverter
 {
     private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public override DateTime ReadJson(JsonReader reader, Type objectType, DateTime existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override bool CanConvert(Type objectType)
+    {
+        return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
         if (reader.TokenType == JsonToken.Null)
+        {
+            if (objectType == typeof(DateTime?))
+            {
+                return null!;
+            }
+
             return DateTime.MinValue;
+        }
 
         if (reader.TokenType == JsonToken.Integer)
         {
@@ -27,15 +39,16 @@ public class UnixTimestampConverter : JsonConverter<DateTime>
         throw new JsonSerializationException($"Unexpected token type: {reader.TokenType}");
     }
 
-    public override void WriteJson(JsonWriter writer, DateTime value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        if (value == DateTime.MinValue)
+        if (value == null || (value is DateTime dateTime && dateTime == DateTime.MinValue))
         {
             writer.WriteNull();
         }
         else
         {
-            long milliseconds = (long)(value.ToUniversalTime() - Epoch).TotalMilliseconds;
+            DateTime currentDateTime = (DateTime)value;
+            long milliseconds = (long)(currentDateTime.ToUniversalTime() - Epoch).TotalMilliseconds;
             writer.WriteValue(milliseconds);
         }
     }

@@ -1,5 +1,6 @@
 using Apps.GlobalLink.Actions;
 using Apps.GlobalLink.Models.Requests.Submissions;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Files;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -129,5 +130,30 @@ public class FileSubmissionActionTests : TestBase
         // Log results
         Console.WriteLine($"Downloaded {result.SourceFiles.Count()} source files from submission {submissionId} for phase {phaseName}");
         Console.WriteLine(JsonConvert.SerializeObject(result, Formatting.Indented));
+    }
+
+    [TestMethod]
+    public async Task DownloadSourceFilesAsync_WithCompletedSubmission_ShouldFailWithProperErrorMessage()
+    {
+        // Arrange
+        var submissionActions = new FileSubmissionAction(InvocationContext, FileManager);
+        var submissionId = "18036";
+        var phaseName = "completed";
+        
+        var request = new DownloadSourceFilesRequest
+        {
+            SubmissionId = submissionId,
+            PhaseName = phaseName
+        };
+
+        // Act
+        var exception = await Assert.ThrowsExceptionAsync<PluginMisconfigurationException>(async () =>
+        {
+            await submissionActions.DownloadSourceFilesAsync(request);
+        });
+
+        // Assert
+        Assert.IsNotNull(exception);
+        Assert.AreEqual("The submission is already processed. You cannot download source files from a processed submission. Please create a new submission to upload source files.", exception.Message);
     }
 }

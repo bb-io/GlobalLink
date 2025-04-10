@@ -64,6 +64,13 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     [Action("Download source files", Description = "Downloads a source file from a submission.")]
     public async Task<DownloadSourceFilesResponse> DownloadSourceFilesAsync([ActionParameter] DownloadSourceFilesRequest request)
     {
+        var submissionActions = new SubmissionActions(InvocationContext);
+        var submission = await submissionActions.GetSubmissionAsync(new() { SubmissionId = request.SubmissionId });
+        if(submission.Status == "PROCESSED")
+        {
+            throw new PluginMisconfigurationException("The submission is already processed. You cannot download source files from a processed submission. Please create a new submission to upload source files.");
+        }
+
         var targets = await GetTargetsAsync(request.SubmissionId, "IN_PROCESS");
         var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets, request.PhaseName);
         return new DownloadSourceFilesResponse

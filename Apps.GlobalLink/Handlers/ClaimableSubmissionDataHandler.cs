@@ -15,6 +15,7 @@ public class ClaimableSubmissionDataHandler(InvocationContext invocationContext)
 
         var response = await apiClient.PaginateAsync<ClaimableSubmissionResponse>(request);
         return response
+            .Where(x => x.Languages != null && x.Languages.Any())
             .Where(x => string.IsNullOrEmpty(context.SearchString) || x.SubmissionName.Contains(context.SearchString, StringComparison.OrdinalIgnoreCase))
             .Select(x => new DataSourceItem(x.SubmissionId, x.SubmissionName)).ToList();
     }

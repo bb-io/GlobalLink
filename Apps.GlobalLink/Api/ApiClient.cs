@@ -20,6 +20,7 @@ public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credential
         Formatting = Formatting.None,
         DateFormatHandling = DateFormatHandling.IsoDateFormat,
         DateParseHandling = DateParseHandling.None,
+        Converters = new List<JsonConverter> { new UnixTimestampConverter() }
     };
 
     public async Task<List<T>> PaginateAsync<T>(RestRequest request)

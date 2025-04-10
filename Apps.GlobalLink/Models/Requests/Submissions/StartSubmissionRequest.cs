@@ -4,8 +4,8 @@ using Blackbird.Applications.Sdk.Common.Dynamic;
 
 namespace Apps.GlobalLink.Models.Requests.Submissions;
 
-public class DownloadTargetFilesRequest : SubmissionRequest
-{ 
-    [Display("Submission ID"), DataSource(typeof(ProcessedSubmissionDataHandler))]
+public class StartSubmissionRequest
+{
+    [Display("Submission ID"), DataSource(typeof(WaitingSubmissionDataHandler))]
     public string SubmissionId { get; set; } = string.Empty;
 }
