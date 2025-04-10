@@ -121,6 +121,12 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         var submissionRequest = new ApiRequest($"/rest/v0/submissions/{claimSubmissionRequest.SubmissionId}", Method.Get, Credentials);
         var response = await Client.ExecuteWithErrorHandling<SubmissionResponse>(submissionRequest);
 
+        if(response.Status != "READY")
+        {
+            throw new PluginApplicationException(
+                $"The submission is in '{response.Status}' status. It can be claimed only if it is in 'Active' UI status and 'READY' API status.");
+        }
+
         var requestBody = new[]
         {
             new
