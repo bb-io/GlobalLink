@@ -100,10 +100,10 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     public async Task<StartSubmissionResponse> StartSubmissionAsync([ActionParameter] StartSubmissionRequest submissionId)
     {
         var submission = await GetSubmissionAsync(new() { SubmissionId = submissionId.SubmissionId });  
-        if (submission.Status != "WAITING")
+        if (submission.Status != "WAITING" && submission.Status != "PREFLIGHT")
         {
             throw new PluginApplicationException(
-                $"The submission is in '{submission.Status}' status. It can be started only if it is in 'On Hold' UI status and 'WAITING' API status.");
+                $"The submission is in '{submission.Status}' status. It can be started only if it is in 'On Hold' UI status and 'WAITING' or 'PREFLIGHT' API status.");
         }
 
         await AnalyzeSubmissionAsync(submissionId.SubmissionId);
