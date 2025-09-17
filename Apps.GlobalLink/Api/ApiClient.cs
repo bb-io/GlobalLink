@@ -82,6 +82,16 @@ public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credential
 
     protected override Exception ConfigureErrorException(RestResponse response)
     {
+        if (string.IsNullOrEmpty(response.Content))
+        {
+            if (string.IsNullOrEmpty(response.ErrorMessage))
+            {
+                return new PluginApplicationException($"Status code: {response.StatusCode}");
+            }
+            
+            return new PluginApplicationException(response.ErrorMessage);
+        }
+        
         var error = JsonConvert.DeserializeObject<ErrorDto>(response.Content!);
         if(error is null)
         {

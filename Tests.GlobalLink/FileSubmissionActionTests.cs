@@ -64,7 +64,7 @@ public class FileSubmissionActionTests : TestBase
     {
         // Arrange
         var submissionActions = new FileSubmissionAction(InvocationContext, FileManager);
-        var submissionId = "17855";
+        var submissionId = "7363";
         
         var request = new DownloadTargetFilesRequest
         {
@@ -110,8 +110,8 @@ public class FileSubmissionActionTests : TestBase
     {
         // Arrange
         var submissionActions = new FileSubmissionAction(InvocationContext, FileManager);
-        var submissionId = "17955";
-        var phaseName = "Translation";
+        var submissionId = "7363";
+        var phaseName = "completed";
         
         var request = new DownloadSourceFilesRequest
         {

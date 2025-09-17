@@ -1,5 +1,6 @@
 using Apps.GlobalLink.Api;
 using Apps.GlobalLink.Models.Dtos;
+using Apps.GlobalLink.Models.Enums;
 using Apps.GlobalLink.Models.Requests.Submissions;
 using Apps.GlobalLink.Models.Responses.Submissions;
 using Apps.GlobalLink.Services;
@@ -71,7 +72,12 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             throw new PluginMisconfigurationException("The submission is already processed. You cannot download source files from a processed submission. Please create a new submission to upload source files.");
         }
 
-        var targets = await GetTargetsAsync(request.SubmissionId, "IN_PROCESS");
+        var targets = await GetTargetsAsync(request.SubmissionId, ["IN_PROCESS"], FileRole.Source);
+        if(targets.Count == 0)
+        {
+            return await DownloadSourceFilesWithoutTargets(request.SubmissionId, submission.SourceLanguage, submission.TargetLanguages);
+        }
+        
         var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets, request.PhaseName);
         return new DownloadSourceFilesResponse
         {
@@ -82,7 +88,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     [Action("Download target files", Description = "Downloads a translated file from a submission.")]
     public async Task<DownloadTargetFilesResponse> DownloadTargetFilesAsync([ActionParameter] DownloadTargetFilesRequest request)
     {
-        var targets = await GetTargetsAsync(request.SubmissionId, "PROCESSED");
+        var targets = await GetTargetsAsync(request.SubmissionId, ["PROCESSED", "DELIVERED"], FileRole.Target);
         var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
         return new DownloadTargetFilesResponse
         {
@@ -106,6 +112,39 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             var failedTargets = string.Join(", ", completeDto.FailedTargets.Select(x => x));
             throw new PluginApplicationException($"Failed to complete phase for target IDs: {failedTargets}. Please ask blackbird support for further investigation and explanation.");
         }
+    }
+    
+    private async Task<DownloadSourceFilesResponse> DownloadSourceFilesWithoutTargets(string submissionId, string sourceLanguage, List<string> targetLanguages)
+    {
+        var downloadSourceFilesRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
+            .AddQueryParameter("sourceFiles", "true")
+            .AddQueryParameter("includeManifest", "false");
+        
+        var downloadProcessDto = await Client.ExecuteWithErrorHandling<DownloadProcessDto>(downloadSourceFilesRequest);
+        if (!downloadProcessDto.ProcessingFinished)
+        {
+            await PollDownloadProcessCompletionAsync(submissionId, downloadProcessDto.DownloadId);
+        }
+        
+        var downloadedFiles = await DownloadAndExtractFilesAsync(downloadProcessDto.DownloadId);
+        var sourceFiles = new List<DownloadFileGroupResponse>();
+        foreach (var downloadedFile in downloadedFiles)
+        {
+            foreach (var targetLanguage in targetLanguages)
+            {
+                sourceFiles.Add(new DownloadFileGroupResponse
+                {
+                    SourceLanguage = sourceLanguage,
+                    TargetLanguage = targetLanguage,
+                    File = downloadedFile
+                });
+            }
+        }
+        
+        return new DownloadSourceFilesResponse
+        {
+            SourceFiles = sourceFiles
+        };
     }
 
     private async Task<PhaseResponse> GetPhaseForFileAsync(string submissionId, string fileName) 
@@ -158,15 +197,16 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             $"Upload process timeout after {MaxRetries} attempts. Please contact blackbird support for futher investigation and explanation.");
     }
 
-    private async Task<List<TargetResponse>> GetTargetsAsync(string submissionId, string targetStatus)
+    private async Task<List<TargetResponse>> GetTargetsAsync(string submissionId, List<string> targetStatuses, FileRole fileRole)
     {
         const int MaxRetries = 3;
         var baseDelayMilliseconds = 5000;
         
         for (int retry = 0; retry < MaxRetries; retry++)
         {
+            var statusDivider = string.Join(",", targetStatuses);
             var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
-                .AddQueryParameter("targetStatus", targetStatus)
+                .AddQueryParameter("targetStatus", statusDivider)
                 .AddQueryParameter("submissionIds", submissionId);
 
             var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
@@ -181,7 +221,13 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
                 await Task.Delay(delayTime);
             }
         }
+
+        if (fileRole == FileRole.Source)
+        {
+            return [];
+        }
         
+        var targetStatus = string.Join(" or ", targetStatuses);
         throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in {targetStatus} status after {MaxRetries} retries.");
     }
 
@@ -236,7 +282,6 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         var downloadZipRequest = new ApiRequest($"/rest/v0/submissions/download/{downloadId}", Method.Get, Credentials);
         var downloadZipResponse = await Client.ExecuteWithErrorHandling(downloadZipRequest);
 
-        var contentDisposition = downloadZipResponse.Headers?.FirstOrDefault(x => x.Name == "Content-Disposition")?.Value?.ToString();
         var zipBytes = downloadZipResponse.RawBytes!;
         var memoryStream = new MemoryStream(zipBytes);
         memoryStream.Position = 0;
