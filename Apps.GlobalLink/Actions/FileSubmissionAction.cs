@@ -72,7 +72,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             throw new PluginMisconfigurationException("The submission is already processed. You cannot download source files from a processed submission. Please create a new submission to upload source files.");
         }
 
-        var targets = await GetTargetsAsync(request.SubmissionId, "IN_PROCESS", FileRole.Source);
+        var targets = await GetTargetsAsync(request.SubmissionId, ["IN_PROCESS"], FileRole.Source);
         if(targets.Count == 0)
         {
             return await DownloadSourceFilesWithoutTargets(request.SubmissionId, submission.SourceLanguage, submission.TargetLanguages);
@@ -88,7 +88,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     [Action("Download target files", Description = "Downloads a translated file from a submission.")]
     public async Task<DownloadTargetFilesResponse> DownloadTargetFilesAsync([ActionParameter] DownloadTargetFilesRequest request)
     {
-        var targets = await GetTargetsAsync(request.SubmissionId, "PROCESSED", FileRole.Target);
+        var targets = await GetTargetsAsync(request.SubmissionId, ["PROCESSED", "DELIVERED"], FileRole.Target);
         var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets);
         return new DownloadTargetFilesResponse
         {
@@ -197,15 +197,16 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             $"Upload process timeout after {MaxRetries} attempts. Please contact blackbird support for futher investigation and explanation.");
     }
 
-    private async Task<List<TargetResponse>> GetTargetsAsync(string submissionId, string targetStatus, FileRole fileRole)
+    private async Task<List<TargetResponse>> GetTargetsAsync(string submissionId, List<string> targetStatuses, FileRole fileRole)
     {
         const int MaxRetries = 3;
         var baseDelayMilliseconds = 5000;
         
         for (int retry = 0; retry < MaxRetries; retry++)
         {
+            var statusDivider = string.Join(",", targetStatuses);
             var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
-                .AddQueryParameter("targetStatus", targetStatus)
+                .AddQueryParameter("targetStatus", statusDivider)
                 .AddQueryParameter("submissionIds", submissionId);
 
             var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
@@ -226,6 +227,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             return [];
         }
         
+        var targetStatus = string.Join(" or ", targetStatuses);
         throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in {targetStatus} status after {MaxRetries} retries.");
     }
 
