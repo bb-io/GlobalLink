@@ -6,13 +6,13 @@
         <Nullable>enable</Nullable>
         <Product>GlobalLink Enterprise [Beta]</Product>
         <Description>GlobalLink is a cloud-based, vendor-agnostic technology platform that optimizes translation management for Enterprise and SMB companies. It helps users in delivering and maintaining multilingual websites quickly and affordably. GlobalLink is trusted by thousands of businesses in producing results, streamlining project management, driving efficiency, and accelerating the time to market in translation work.</Description>
-        <Version>1.0.12</Version>
+        <Version>1.0.13</Version>
         <AssemblyName>Apps.GlobalLink</AssemblyName>
         <RootNamespace>Apps.GlobalLink</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Blackbird.Applications.Sdk.Common" Version="2.11.0" />
+        <PackageReference Include="Blackbird.Applications.SDK.Blueprints" Version="1.0.0-rc.10308" />
         <PackageReference Include="Blackbird.Applications.Sdk.Utils" Version="1.0.25" />
         <PackageReference Include="MimeTypes" Version="2.5.2">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
