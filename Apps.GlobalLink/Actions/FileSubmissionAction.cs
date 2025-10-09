@@ -15,7 +15,7 @@ using RestSharp;
 
 namespace Apps.GlobalLink.Actions;
 
-[ActionList]
+[ActionList("File submission")]
 public class FileSubmissionAction(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : Invocable(invocationContext)
 {
     private readonly IZipFileService zipFileService = new ZipFileService(fileManagementClient);

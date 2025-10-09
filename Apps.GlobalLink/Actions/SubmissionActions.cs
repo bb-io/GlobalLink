@@ -11,7 +11,7 @@ using RestSharp;
 
 namespace Apps.GlobalLink.Actions;
 
-[ActionList]
+[ActionList("Submission")]
 public class SubmissionActions(InvocationContext invocationContext) : Invocable(invocationContext)
 {
     [Action("Search submissions", Description = "Searches for submissions based on various criteria such as due date, date started, status, and owner.")]
