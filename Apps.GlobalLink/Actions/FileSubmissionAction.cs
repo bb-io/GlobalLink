@@ -67,17 +67,17 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     {
         var submissionActions = new SubmissionActions(InvocationContext);
         var submission = await submissionActions.GetSubmissionAsync(new() { SubmissionId = request.SubmissionId });
-        if(submission.Status == "PROCESSED")
+        if (submission.Status == "PROCESSED")
         {
             throw new PluginMisconfigurationException("The submission is already processed. You cannot download source files from a processed submission. Please create a new submission to upload source files.");
         }
 
         var targets = await GetTargetsAsync(request.SubmissionId, ["IN_PROCESS"], FileRole.Source);
-        if(targets.Count == 0)
+        if (targets.Count == 0)
         {
             return await DownloadSourceFilesWithoutTargets(request.SubmissionId, submission.SourceLanguage, submission.TargetLanguages);
         }
-        
+
         var allFiles = await ProcessTargetsAsync(request.SubmissionId, targets, request.PhaseName);
         return new DownloadSourceFilesResponse
         {
@@ -152,13 +152,13 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         var transition = phaseResponse.Transitions.FirstOrDefault();
         var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/phases/{phaseResponse.CurrentPhase}/complete", Method.Post, Credentials)
             .AddJsonBody(new
-             { 
+            {
                 targetIds = new List<long> { long.Parse(phaseResponse.TargetId) },
                 transition = transition?.Name ?? null,
-             });
+            });
 
         var completeDto = await Client.ExecuteWithErrorHandling<CompletePhaseDto>(apiRequest);
-        if(completeDto.FailedTargets.Length != 0)
+        if (completeDto.FailedTargets.Length != 0)
         {
             var failedTargets = string.Join(", ", completeDto.FailedTargets.Select(x => x));
             throw new PluginApplicationException($"Failed to complete phase for target IDs: {failedTargets}. Please ask blackbird support for further investigation and explanation.");
@@ -188,13 +188,13 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         var downloadSourceFilesRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
             .AddQueryParameter("sourceFiles", "true")
             .AddQueryParameter("includeManifest", "false");
-        
+
         var downloadProcessDto = await Client.ExecuteWithErrorHandling<DownloadProcessDto>(downloadSourceFilesRequest);
         if (!downloadProcessDto.ProcessingFinished)
         {
             await PollDownloadProcessCompletionAsync(submissionId, downloadProcessDto.DownloadId);
         }
-        
+
         var downloadedFiles = await DownloadAndExtractFilesAsync(downloadProcessDto.DownloadId);
         var sourceFiles = new List<DownloadFileGroupResponse>();
         foreach (var downloadedFile in downloadedFiles)
@@ -209,26 +209,26 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
                 });
             }
         }
-        
+
         return new DownloadSourceFilesResponse
         {
             SourceFiles = sourceFiles
         };
     }
 
-    private async Task<PhaseResponse> GetPhaseForFileAsync(string submissionId, string fileName) 
+    private async Task<PhaseResponse> GetPhaseForFileAsync(string submissionId, string fileName)
     {
         var request = new ApiRequest($"/rest/v0/submissions/{submissionId}/phases?targetids&documentId", Method.Get, Credentials);
         var phases = await Client.PaginateAsync<PhaseResponse>(request);
-        
-        var fileNameWithoutTxlf = fileName.EndsWith(".txlf", StringComparison.OrdinalIgnoreCase) 
-            ? fileName.Substring(0, fileName.Length - 5) 
+
+        var fileNameWithoutTxlf = fileName.EndsWith(".txlf", StringComparison.OrdinalIgnoreCase)
+            ? fileName.Substring(0, fileName.Length - 5)
             : fileName;
-        
-        var phase = phases.FirstOrDefault(x => 
-            string.Equals(x.TargetFileName, fileName, StringComparison.OrdinalIgnoreCase) || 
+
+        var phase = phases.FirstOrDefault(x =>
+            string.Equals(x.TargetFileName, fileName, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(x.TargetFileName, fileNameWithoutTxlf, StringComparison.OrdinalIgnoreCase));
-        
+
         if (phase == null)
         {
             var allFileNames = string.Join(", ", phases.Select(x => x.TargetFileName));
@@ -253,7 +253,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             {
                 return;
             }
-            else if(processDto.HasProcessingFailed)
+            else if (processDto.HasProcessingFailed)
             {
                 throw new PluginApplicationException($"Upload process failed with message: {processDto.GetErrorMessage()}");
             }
@@ -270,7 +270,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
     {
         const int MaxRetries = 3;
         var baseDelayMilliseconds = 5000;
-        
+
         for (int retry = 0; retry < MaxRetries; retry++)
         {
             var statusDivider = string.Join(",", targetStatuses);
@@ -283,7 +283,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             {
                 return targets;
             }
-            
+
             if (retry < MaxRetries - 1)
             {
                 var delayTime = baseDelayMilliseconds * (retry + 1);
@@ -295,7 +295,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         {
             return [];
         }
-        
+
         var targetStatus = string.Join(" or ", targetStatuses);
         throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in {targetStatus} status after {MaxRetries} retries.");
     }
@@ -308,7 +308,7 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             var downloadProcessDto = phaseName == null
                 ? await InitiateDeliverableDownloadAsync(submissionId, target.TargetId)
                 : await InitiateTranslatableDownloadAsync(submissionId, target.TargetId, phaseName);
-            
+
             if (!downloadProcessDto.ProcessingFinished)
             {
                 await PollDownloadProcessCompletionAsync(submissionId, downloadProcessDto.DownloadId);

@@ -46,21 +46,21 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
                 .ToList();
         }
 
-        if(request.ExcludeSubmissionsWithOwnersAssigned == true)
+        if (request.ExcludeSubmissionsWithOwnersAssigned == true)
         {
             result = result
                 .Where(s => s.Owners == null || s.Owners.Count == 0)
                 .ToList();
         }
 
-        if(request.DateStartedFrom.HasValue)
+        if (request.DateStartedFrom.HasValue)
         {
             result = result
                 .Where(s => s.DateStarted >= request.DateStartedFrom.Value)
                 .ToList();
         }
 
-        if(request.DateStartedTo.HasValue)
+        if (request.DateStartedTo.HasValue)
         {
             result = result
                 .Where(s => s.DateStarted <= request.DateStartedTo.Value)
@@ -99,7 +99,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
     [Action("Start submission", Description = "First analyzes and then starts a submission.")]
     public async Task<StartSubmissionResponse> StartSubmissionAsync([ActionParameter] StartSubmissionRequest submissionId)
     {
-        var submission = await GetSubmissionAsync(new() { SubmissionId = submissionId.SubmissionId });  
+        var submission = await GetSubmissionAsync(new() { SubmissionId = submissionId.SubmissionId });
         if (submission.Status != "WAITING" && submission.Status != "PREFLIGHT")
         {
             throw new PluginApplicationException(
@@ -121,7 +121,7 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         var submissionRequest = new ApiRequest($"/rest/v0/submissions/{claimSubmissionRequest.SubmissionId}", Method.Get, Credentials);
         var response = await Client.ExecuteWithErrorHandling<SubmissionResponse>(submissionRequest);
 
-        if(response.Status != "READY")
+        if (response.Status != "READY")
         {
             throw new PluginApplicationException(
                 $"The submission is in '{response.Status}' status. It can be claimed only if it is in 'Active' UI status and 'READY' API status.");
