@@ -9,9 +9,9 @@ using RestSharp;
 namespace Apps.GlobalLink.Api;
 
 public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credentials) : BlackBirdRestClient(new()
-    {
-        BaseUrl = new Uri(credentials.GetBaseUrl()),
-    })
+{
+    BaseUrl = new Uri(credentials.GetBaseUrl()),
+})
 {
     protected override JsonSerializerSettings? JsonSettings => new()
     {
@@ -30,53 +30,53 @@ public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credential
         {
             request.AddQueryParameter("pageSize", "200");
         }
-        
+
         int currentPage = 0;
         int totalSize = 0;
         bool firstPage = true;
-        
+
         do
         {
             if (!firstPage)
             {
-                var existingPageParam = request.Parameters.FirstOrDefault(p => 
+                var existingPageParam = request.Parameters.FirstOrDefault(p =>
                     p.Name == "pageNumber" && p.Type == ParameterType.QueryString);
                 if (existingPageParam != null)
                 {
                     request.RemoveParameter(existingPageParam);
                 }
-                
+
                 request.AddQueryParameter("pageNumber", currentPage.ToString());
             }
-            
+
             firstPage = false;
-            
+
             var response = await ExecuteWithErrorHandling(request);
             var pageResults = JsonConvert.DeserializeObject<List<T>>(response.Content!, JsonSettings);
-        
+
             if (pageResults != null && pageResults.Count > 0)
             {
                 allResults.AddRange(pageResults);
             }
-            
-            var pageSizeHeader = response.Headers?.FirstOrDefault(h => 
+
+            var pageSizeHeader = response.Headers?.FirstOrDefault(h =>
                 h.Name?.Equals("page-size", StringComparison.OrdinalIgnoreCase) == true);
-            
-            var totalSizeHeader = response.Headers?.FirstOrDefault(h => 
+
+            var totalSizeHeader = response.Headers?.FirstOrDefault(h =>
                 h.Name?.Equals("total-size", StringComparison.OrdinalIgnoreCase) == true);
-            
+
             if (totalSizeHeader != null && int.TryParse(totalSizeHeader.Value?.ToString(), out int newTotalSize))
             {
                 totalSize = newTotalSize;
             }
-            
+
             currentPage++;
             if (allResults.Count >= totalSize || pageResults == null || pageResults.Count == 0)
             {
                 break;
             }
         } while (true);
-        
+
         return allResults;
     }
 
@@ -88,12 +88,12 @@ public class ApiClient(IEnumerable<AuthenticationCredentialsProvider> credential
             {
                 return new PluginApplicationException($"Status code: {response.StatusCode}");
             }
-            
+
             return new PluginApplicationException(response.ErrorMessage);
         }
-        
+
         var error = JsonConvert.DeserializeObject<ErrorDto>(response.Content!);
-        if(error is null)
+        if (error is null)
         {
             return new PluginApplicationException(response.Content ?? response.ErrorMessage ?? $"Status code: {response.StatusCode}");
         }
