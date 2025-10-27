@@ -96,6 +96,57 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         };
     }
 
+    [Action("Download reference files", Description = "Download submission-level and/or language-level reference files for a submission.")]
+    public async Task<DownloadReferenceFilesResponse> DownloadReferenceFilesAsync([ActionParameter] DownloadReferenceFilesRequest request)
+    {
+        if (request.SubmissionLevel != true && (request.Languages == null || !request.Languages.Any()))
+            throw new PluginMisconfigurationException("Specify at least one: submission-level references or language-level references.");
+
+        var submissionActions = new SubmissionActions(InvocationContext);
+        var submission = await submissionActions.GetSubmissionAsync(new() { SubmissionId = request.SubmissionId });
+
+        var allFiles = new List<DownloadFileGroupResponse>();
+
+        if (request.SubmissionLevel == true)
+        {
+            var proc = await InitiateReferenceDownload_SubmissionLevelAsync(request.SubmissionId);
+            if (!proc.ProcessingFinished)
+                await PollDownloadProcessCompletionAsync(request.SubmissionId, proc.DownloadId);
+
+            var files = await DownloadAndExtractFilesAsync(proc.DownloadId);
+            foreach (var targetLang in submission.TargetLanguages)
+            {
+                files.ForEach(f => allFiles.Add(new DownloadFileGroupResponse
+                {
+                    SourceLanguage = submission.SourceLanguage,
+                    TargetLanguage = targetLang,
+                    File = f
+                }));
+            }
+        }
+
+        var langs = request.Languages?.Where(l => !string.IsNullOrWhiteSpace(l)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (langs != null && langs.Count > 0)
+        {
+            foreach (var lang in langs)
+            {
+                var proc = await InitiateReferenceDownload_LanguageLevelAsync(request.SubmissionId, lang);
+                if (!proc.ProcessingFinished)
+                    await PollDownloadProcessCompletionAsync(request.SubmissionId, proc.DownloadId);
+
+                var files = await DownloadAndExtractFilesAsync(proc.DownloadId);
+                files.ForEach(f => allFiles.Add(new DownloadFileGroupResponse
+                {
+                    SourceLanguage = submission.SourceLanguage,
+                    TargetLanguage = lang,
+                    File = f
+                }));
+            }
+        }
+
+        return new DownloadReferenceFilesResponse { ReferenceFiles = allFiles };
+    }
+
     private async Task CompletePhaseAsync(string submissionId, PhaseResponse phaseResponse)
     {
         var transition = phaseResponse.Transitions.FirstOrDefault();
@@ -113,7 +164,25 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
             throw new PluginApplicationException($"Failed to complete phase for target IDs: {failedTargets}. Please ask blackbird support for further investigation and explanation.");
         }
     }
-    
+
+    private async Task<DownloadProcessDto> InitiateReferenceDownload_SubmissionLevelAsync(string submissionId)
+    {
+        var req = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
+            .AddQueryParameter("submissionReferenceFiles", true)
+            .AddQueryParameter("includeManifest", false);
+
+        return await Client.ExecuteWithErrorHandling<DownloadProcessDto>(req);
+    }
+
+    private async Task<DownloadProcessDto> InitiateReferenceDownload_LanguageLevelAsync(string submissionId, string language)
+    {
+        var req = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
+            .AddQueryParameter("languageReferenceFiles", language)
+            .AddQueryParameter("includeManifest", false);
+
+        return await Client.ExecuteWithErrorHandling<DownloadProcessDto>(req);
+    }
+
     private async Task<DownloadSourceFilesResponse> DownloadSourceFilesWithoutTargets(string submissionId, string sourceLanguage, List<string> targetLanguages)
     {
         var downloadSourceFilesRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}/download", Method.Get, Credentials)
