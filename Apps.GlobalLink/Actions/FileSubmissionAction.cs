@@ -62,6 +62,38 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         await CompletePhaseAsync(request.SubmissionId, phase);
     }
 
+    [Action("Reopen target file", Description = "Uploads an updated version of an already completed target file and re-completes it via the submission's linked reopen workflow. Use this when issues are found after final delivery and the target needs to be corrected. Note: this does not move the target backward in the workflow, it only re-uploads and re-completes it.")]
+    public async Task<ReopenTargetFileResponse> ReopenTargetFileAsync([ActionParameter] ReopenTargetFileRequest request)
+    {
+        var submissionActions = new SubmissionActions(InvocationContext);
+        var submission = await submissionActions.GetSubmissionAsync(new() { SubmissionId = request.SubmissionId });
+
+        var batch = submission.BatchInfos.FirstOrDefault();
+        if (batch == null)
+        {
+            throw new PluginApplicationException($"Submission ID {request.SubmissionId} has no batches, so its workflow could not be determined.");
+        }
+
+        var reopenWorkflowId = await ResolveReopenWorkflowIdAsync(submission.ProjectId, batch.WorkflowId.ToString(), request.ReopenWorkflowId);
+
+        var stream = await fileManagementClient.DownloadAsync(request.File);
+        var bytes = await stream.GetByteData();
+
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/{request.SubmissionId}/upload/reopen", Method.Post, Credentials)
+            .AddFile("file", bytes, request.File.Name)
+            .AddParameter("reopenWorkflowId", reopenWorkflowId);
+
+        if (request.ExtractArchive == true)
+        {
+            apiRequest.AddParameter("extractArchive", true);
+        }
+
+        var process = await Client.ExecuteWithErrorHandling<ProcessDto>(apiRequest);
+        await PollForTargetFileUploadingCompletionAsync(request.SubmissionId, process.ProcessId);
+
+        return new ReopenTargetFileResponse { ReopenWorkflowId = reopenWorkflowId };
+    }
+
     [Action("Download source files", Description = "Downloads a source file from a submission.")]
     public async Task<DownloadSourceFilesResponse> DownloadSourceFilesAsync([ActionParameter] DownloadSourceFilesRequest request)
     {
@@ -93,6 +125,34 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         return new DownloadTargetFilesResponse
         {
             TargetFiles = allFiles
+        };
+    }
+
+    [Action("Mark targets as delivered", Description = "Marks targets of a submission as delivered, changing their status from 'PROCESSED' to 'DELIVERED'. This flags the content as successfully returned to the client, and, for clients using polling, prevents delivered targets from appearing again on the next polling cycle. If no target IDs are specified, all targets currently in 'PROCESSED' status for the submission are marked as delivered.")]
+    public async Task<MarkTargetsAsDeliveredResponse> MarkTargetsAsDeliveredAsync([ActionParameter] MarkTargetsAsDeliveredRequest request)
+    {
+        var targetIds = request.TargetIds?.Where(id => !string.IsNullOrWhiteSpace(id)).ToList() ?? [];
+        if (targetIds.Count == 0)
+        {
+            targetIds = await GetProcessedTargetIdsAsync(request.SubmissionId);
+        }
+
+        if (targetIds.Count == 0)
+        {
+            throw new PluginApplicationException($"No targets in 'PROCESSED' status were found for submission ID {request.SubmissionId}.");
+        }
+
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/{request.SubmissionId}/targets/delivered", Method.Post, Credentials)
+            .AddJsonBody(new
+            {
+                targetIds = targetIds.Select(long.Parse)
+            });
+
+        var result = await Client.ExecuteWithErrorHandling<MarkTargetsAsDeliveredDto>(apiRequest);
+        return new MarkTargetsAsDeliveredResponse
+        {
+            SuccessfullyDeliveredTargetIds = result.SuccessfullyDeliveredTargets.Select(x => x.ToString()),
+            FailedToDeliverTargetIds = result.FailedToDeliverTargets.Select(x => x.ToString())
         };
     }
 
@@ -298,6 +358,40 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
 
         var targetStatus = string.Join(" or ", targetStatuses);
         throw new PluginApplicationException($"No target files found for submission ID {submissionId} that are in {targetStatus} status after {MaxRetries} retries.");
+    }
+
+    private async Task<string> ResolveReopenWorkflowIdAsync(string projectId, string workflowId, string? requestedReopenWorkflowId)
+    {
+        var apiRequest = new ApiRequest($"/rest/v0/projects/{projectId}/workflows/{workflowId}", Method.Get, Credentials);
+        var workflow = await Client.ExecuteWithErrorHandling<WorkflowDto>(apiRequest);
+
+        if (!string.IsNullOrEmpty(requestedReopenWorkflowId))
+        {
+            return requestedReopenWorkflowId;
+        }
+
+        if (workflow.LinkedWorkflows.Count == 0)
+        {
+            throw new PluginApplicationException($"Workflow '{workflow.Name}' (ID {workflow.Id}) has no reopen workflow linked to it, so its targets cannot be reopened. Please configure a reopen workflow in GLE, or contact your GlobalLink administrator.");
+        }
+
+        if (workflow.LinkedWorkflows.Count > 1)
+        {
+            var options = string.Join(", ", workflow.LinkedWorkflows.Select(w => $"{w.Name} (ID {w.Id})"));
+            throw new PluginApplicationException($"Workflow '{workflow.Name}' (ID {workflow.Id}) has multiple reopen workflows linked to it. Please specify one via the 'Reopen workflow ID' parameter: {options}.");
+        }
+
+        return workflow.LinkedWorkflows[0].Id.ToString();
+    }
+
+    private async Task<List<string>> GetProcessedTargetIdsAsync(string submissionId)
+    {
+        var apiRequest = new ApiRequest($"/rest/v0/targets", Method.Get, Credentials)
+            .AddQueryParameter("targetStatus", "PROCESSED")
+            .AddQueryParameter("submissionIds", submissionId);
+
+        var targets = await Client.ExecuteWithErrorHandling<List<TargetResponse>>(apiRequest);
+        return targets.Select(t => t.TargetId).ToList();
     }
 
     private async Task<List<DownloadFileGroupResponse>> ProcessTargetsAsync(string submissionId, List<TargetResponse> targets, string? phaseName = null)

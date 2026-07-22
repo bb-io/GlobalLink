@@ -56,6 +56,7 @@ Before you can connect to `GlobalLink Enterprise` through Blackbird, you need to
 
 - **Download source files**: Downloads source files from a submission at a specific phase.
 - **Download target files**: Downloads translated files from a completed submission.
+- **Mark targets as delivered**: Marks targets of a submission as delivered, changing their status from `PROCESSED` to `DELIVERED`. This flags the content as successfully returned to the client and, for clients using polling, prevents delivered targets from appearing again on the next polling cycle. If no target IDs are specified, all targets currently in `PROCESSED` status for the submission are marked as delivered.
 
 ## Events
 
