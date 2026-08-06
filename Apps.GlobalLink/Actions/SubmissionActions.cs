@@ -1,4 +1,5 @@
 using Apps.GlobalLink.Api;
+using Apps.GlobalLink.Constants;
 using Apps.GlobalLink.Models.Dtos;
 using Apps.GlobalLink.Models.Requests.Submissions;
 using Apps.GlobalLink.Models.Responses.Submissions;
@@ -202,7 +203,8 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
             ["instructions"] = request.Instructions ?? string.Empty,
             ["background"] = request.Background ?? string.Empty,
             ["claimScope"] = request.ClaimScope ?? "LANGUAGE",
-            ["batchInfos"] = new[] { CreateBatchInfo(request) }
+            ["batchInfos"] = new[] { CreateBatchInfo(request) },
+            ["techTracking"] = CreateTechTracking(request)
         };
 
         var metadata = new List<KeyValueDto>();
@@ -212,6 +214,17 @@ public class SubmissionActions(InvocationContext invocationContext) : Invocable(
         }
 
         return bodyDictionary;
+    }
+
+    private static object CreateTechTracking(CreateSubmissionRequest request)
+    {
+        return new
+        {
+            adaptorName = TechTrackingConstants.AdaptorName,
+            adaptorVersion = ApplicationVersion.Current,
+            clientVersion = string.IsNullOrWhiteSpace(request.ClientVersion) ? null : request.ClientVersion.Trim(),
+            technologyProduct = TechTrackingConstants.TechnologyProduct
+        };
     }
 
     private static object CreateBatchInfo(CreateSubmissionRequest request)

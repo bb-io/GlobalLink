@@ -18,7 +18,11 @@ namespace Apps.GlobalLink.Actions;
 [ActionList("File submission")]
 public class FileSubmissionAction(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : Invocable(invocationContext)
 {
+    private const string DefaultBatchName = "Batch1";
+    private const string NonParsableTargetFormat = "NON_PARSABLE";
+
     private readonly IZipFileService zipFileService = new ZipFileService(fileManagementClient);
+    private readonly IFileFormatResolver fileFormatResolver = new FileFormatResolver(invocationContext.AuthenticationCredentialsProviders);
 
     [Action("Upload source file", Description = "Uploads a source file to a submission.")]
     public async Task<UploadSourceFileResponse> UploadSourceFileAsync([ActionParameter] UploadSourceFileRequest request)
@@ -26,10 +30,16 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         var stream = await fileManagementClient.DownloadAsync(request.File);
         var bytes = await stream.GetByteData();
 
-        // TODO: handle fileFormatName optional parameter
         var apiRequest = new ApiRequest($"/rest/v0/submissions/{request.SubmissionId}/upload/source", Method.Post, Credentials)
             .AddFile("file", bytes, request.File.Name)
-            .AddParameter("batchName", request.BatchName ?? "Batch1");
+            .AddParameter("batchName", request.BatchName ?? DefaultBatchName);
+
+        var fileFormatName = await ResolveFileFormatNameAsync(request);
+        if (!string.IsNullOrWhiteSpace(fileFormatName))
+        {
+            // GlobalLink requires this parameter to be omitted entirely, not sent empty, when there is no parser to apply.
+            apiRequest.AddParameter("fileFormatName", fileFormatName);
+        }
 
         return await Client.ExecuteWithErrorHandling<UploadSourceFileResponse>(apiRequest);
     }
@@ -205,6 +215,42 @@ public class FileSubmissionAction(InvocationContext invocationContext, IFileMana
         }
 
         return new DownloadReferenceFilesResponse { ReferenceFiles = allFiles };
+    }
+
+    private async Task<string?> ResolveFileFormatNameAsync(UploadSourceFileRequest request)
+    {
+        if (!string.IsNullOrWhiteSpace(request.FileFormatName))
+        {
+            return request.FileFormatName;
+        }
+
+        try
+        {
+            var submission = await GetSubmissionWithBatchInfosAsync(request.SubmissionId);
+
+            var batchName = request.BatchName ?? DefaultBatchName;
+            var batch = submission.BatchInfos.FirstOrDefault(x => string.Equals(x.Name, batchName, StringComparison.OrdinalIgnoreCase));
+            if (string.Equals(batch?.TargetFormat, NonParsableTargetFormat, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return await fileFormatResolver.ResolveFileFormatNameAsync(submission.ProjectId, request.File);
+        }
+        catch (Exception)
+        {
+            // Detecting the parser is a best effort: when it fails, e.g. because the connection has no access to the
+            // project file formats, we keep uploading without it and let GlobalLink apply its own default parser.
+            return null;
+        }
+    }
+
+    private async Task<SubmissionResponse> GetSubmissionWithBatchInfosAsync(string submissionId)
+    {
+        var apiRequest = new ApiRequest($"/rest/v0/submissions/{submissionId}", Method.Get, Credentials)
+            .AddQueryParameter("getBatchInfos", true);
+
+        return await Client.ExecuteWithErrorHandling<SubmissionResponse>(apiRequest);
     }
 
     private async Task CompletePhaseAsync(string submissionId, PhaseResponse phaseResponse)

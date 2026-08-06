@@ -16,5 +16,9 @@ public class UploadSourceFileRequest
     public FileReference File { get; set; } = default!;
 
     [Display("Batch name", Description = "If not provided we will use 'Batch1' value"), DataSource(typeof(BatchDataHandler))]
-    public string? BatchName { get; set; } 
+    public string? BatchName { get; set; }
+
+    [Display("File format name", Description = "Name of the GlobalLink parser that processes the source file, e.g. 'MSWORD_TXLF'. By default we detect it from the file type and the parsers configured in the project, so only set this if the project has several parsers for the same file type or if you want to override our detection. Ignored for non-parsable batches."),
+     DataSource(typeof(FileFormatDataHandler))]
+    public string? FileFormatName { get; set; }
 }

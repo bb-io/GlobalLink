@@ -8,7 +8,7 @@ using RestSharp;
 
 namespace Apps.GlobalLink.Events;
 
-[PollingEventList]
+[PollingEventList("Submission (polling)")]
 public class SubmissionPollingList(InvocationContext invocationContext) : Invocable(invocationContext)
 {
     private const string InProcessStatus = "IN_PROCESS";

@@ -1,5 +1,6 @@
 using Blackbird.Applications.Sdk.Common;
 using Newtonsoft.Json;
+using Apps.GlobalLink.Models.Dtos;
 using Apps.GlobalLink.Utils;
 
 namespace Apps.GlobalLink.Models.Responses.Submissions;
@@ -14,6 +15,9 @@ public class SubmissionResponse : TrimmedSubmissionResponse
 
     [DefinitionIgnore, Display("Batch infos")]
     public List<BatchInfo> BatchInfos { get; set; } = new();
+
+    [Display("Tech tracking", Description = "Information about the system that created the submission.")]
+    public TechTrackingDto? TechTracking { get; set; }
 }
 
 public class UserInfo
@@ -91,12 +95,4 @@ public class DueDateInfo
     public string PhaseName { get; set; } = string.Empty;
     [JsonConverter(typeof(UnixTimestampConverter))]
     public DateTime DueDate { get; set; }
-}
-
-public class TechTracking
-{
-    public string? AdaptorName { get; set; }
-    public string? AdaptorVersion { get; set; }
-    public string? ClientVersion { get; set; }
-    public string? TechnologyProduct { get; set; }
 }
