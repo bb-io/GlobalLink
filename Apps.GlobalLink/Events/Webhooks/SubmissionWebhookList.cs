@@ -37,8 +37,7 @@ public class SubmissionWebhookList(InvocationContext invocationContext) : Invoca
         {
             throw new InvalidCastException(nameof(webhookRequest.Body));
         }
-
-        // A single submission subscription can carry several scopes, so unrelated events are acknowledged silently.
+        
         if (!string.Equals(payload.EventCode, scope, StringComparison.OrdinalIgnoreCase))
         {
             return Preflight();
