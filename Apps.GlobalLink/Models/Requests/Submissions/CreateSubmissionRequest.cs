@@ -1,3 +1,4 @@
+using Apps.GlobalLink.Constants;
 using Apps.GlobalLink.Handlers;
 using Apps.GlobalLink.Handlers.Static;
 using Apps.GlobalLink.Models.Requests.Projects;
@@ -42,6 +43,9 @@ public class CreateSubmissionRequest : ProjectRequest
      [Display("Due date")]
      public DateTime DueDate { get; set; }
 
+     [Display("Client version", Description = "Name and version of the system that requests the translation, e.g. 'ClientCMS 2.0'. It is stored as part of the submission tech tracking information in GlobalLink. Max 20 characters.")]
+     public string? ClientVersion { get; set; }
+
      public void ThrowIfInvalid()
      {
           if (string.IsNullOrEmpty(Name))
@@ -62,6 +66,11 @@ public class CreateSubmissionRequest : ProjectRequest
           if (TargetLanguages == null || !TargetLanguages.Any())
           {
                throw new PluginMisconfigurationException("'Target languages' input is either empty or null. Please provide a valid target language.");
+          }
+
+          if (ClientVersion?.Trim().Length > TechTrackingConstants.MaxFieldLength)
+          {
+               throw new PluginMisconfigurationException($"'Client version' input is too long. GlobalLink accepts at most {TechTrackingConstants.MaxFieldLength} characters.");
           }
      }
 }
