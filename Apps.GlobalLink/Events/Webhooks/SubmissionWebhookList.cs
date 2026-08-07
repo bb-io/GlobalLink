@@ -44,8 +44,7 @@ public class SubmissionWebhookList(InvocationContext invocationContext) : Invoca
         }
 
         var submissionId = payload.SubmissionId.ToString();
-        if (!string.IsNullOrWhiteSpace(submissionRequest.SubmissionId) &&
-            !string.Equals(submissionRequest.SubmissionId, submissionId, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(submissionRequest.SubmissionId) && !string.Equals(submissionRequest.SubmissionId, submissionId, StringComparison.OrdinalIgnoreCase))
         {
             return Preflight();
         }
